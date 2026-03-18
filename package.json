@@ -1,0 +1,16 @@
+{
+    "name": "cargo-flow",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../admin && npm install",
+        "dev:backend": "cd backend && npm run dev",
+        "dev:frontend": "cd frontend && npm run dev",
+        "dev:admin": "cd admin && npm run dev",
+        "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:admin\"",
+        "start": "concurrently \"cd backend && npm start\" \"cd frontend && npm run build && npm run preview\" \"cd admin && npm run build && npm run preview\""
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}
