@@ -11,7 +11,7 @@ import {
     Chip,
     IconButton
 } from '@mui/material';
-import { Edit, Delete, Security } from 'lucide-react';
+import { Edit, Delete, ShieldCheck } from 'lucide-react';
 
 export default function UserManagement() {
     const { data: users, isLoading } = useAdminUsers();
@@ -25,7 +25,7 @@ export default function UserManagement() {
                     <h2 className="text-2xl font-bold tracking-tight text-gray-900">User Management</h2>
                     <p className="text-gray-500">Manage internal accounts and assign roles securely.</p>
                 </div>
-                <Button variant="contained" color="primary" startIcon={<Security size={18} />}>
+                <Button variant="contained" color="primary" startIcon={<ShieldCheck size={18} />}>
                     Add User
                 </Button>
             </div>

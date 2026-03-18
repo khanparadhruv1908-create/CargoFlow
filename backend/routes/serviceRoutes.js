@@ -1,43 +1,59 @@
 import express from 'express';
+import Service from '../models/Service.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-const services = [
-    {
-        id: "air-freight",
-        title: "Air Freight",
-        description: "Rapid global delivery for time-critical cargo. Leverage our extensive network of top-tier airline partners for the fastest transit times.",
-        icon: "Plane",
-        features: ['Next-Flight-Out delivery', 'Consolidated airfreight', 'Temperature-controlled cargo']
-    },
-    {
-        id: "ocean-freight",
-        title: "Ocean Freight",
-        description: "Cost-effective logistics for heavy, bulky, and long-lead-time cargo. Comprehensive LCL and FCL solutions worldwide.",
-        icon: "Ship",
-        features: ['Full Container Load (FCL)', 'Less than Container Load (LCL)', 'Project Cargo']
-    },
-    {
-        id: "customs-brokerage",
-        title: "Customs Brokerage",
-        description: "Seamless international trade compliance. Ensure your cargo passes borders rapidly without delays.",
-        icon: "FileText",
-        features: ['Tariff classification', 'Duty and tax calculation', 'Regulatory compliance']
-    },
-    {
-        id: "warehousing",
-        title: "Warehousing & Storage",
-        description: "Secure, modern storage facilities designed for operational efficiency. Short-term and long-term storage options.",
-        icon: "Warehouse",
-        features: ['Inventory management system', 'Cross-docking', '24/7 security']
-    }
-];
-
 // @route   GET /api/services
-// @desc    Get all active services
-// @access  Public
-router.get('/', (req, res) => {
-    res.json(services);
+// @desc    Get all active services for frontend
+router.get('/', async (req, res) => {
+    try {
+        const services = await Service.find({ isActive: true });
+        res.json(services);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   GET /api/services/admin
+// @desc    Get all services (including inactive) for admin
+router.get('/admin', protect, authorize('admin', 'manager'), async (req, res) => {
+    try {
+        const services = await Service.find({});
+        res.json(services);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   POST /api/services
+router.post('/', protect, authorize('admin', 'manager'), async (req, res) => {
+    try {
+        const service = await Service.create(req.body);
+        res.status(201).json(service);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// @route   PUT /api/services/:id
+router.put('/:id', protect, authorize('admin', 'manager'), async (req, res) => {
+    try {
+        const service = await Service.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(service);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// @route   DELETE /api/services/:id
+router.delete('/:id', protect, authorize('admin'), async (req, res) => {
+    try {
+        await Service.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Service removed' });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 });
 
 export default router;

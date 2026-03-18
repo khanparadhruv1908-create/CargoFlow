@@ -21,7 +21,7 @@ const Services = () => {
     useEffect(() => {
         const fetchServices = async () => {
             try {
-                const { data } = await api.get('/services');
+                const data = await api.get('/services');
                 setServices(data);
             } catch (err) {
                 console.error("Failed to fetch services", err);
@@ -83,7 +83,13 @@ const Services = () => {
                                             ))}
                                         </ul>
                                         <Link
-                                            to={`/book?service=${service.id}`}
+                                            to={
+                                                service.id === 'warehousing' ? '/warehouse' :
+                                                service.id === 'air-freight' ? '/book?service=air-freight' :
+                                                service.id === 'ocean-freight' ? '/book?service=ocean-freight' :
+                                                service.id === 'customs-brokerage' ? '/book?service=customs-brokerage' :
+                                                `/book?service=${service.id}`
+                                            }
                                             className="mt-auto w-full text-center py-3 px-4 bg-primary text-white font-semibold rounded-xl hover:bg-primary-light transition-colors duration-300 shadow-md hover:shadow-lg"
                                         >
                                             Book Now

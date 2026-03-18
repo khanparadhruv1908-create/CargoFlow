@@ -1,5 +1,6 @@
 import CustomsPort from '../models/CustomsPort.js';
 import CustomsDeclaration from '../models/CustomsDeclaration.js';
+import Invoice from '../models/Invoice.js';
 
 // ---- PORT MANAGEMENT (ADMIN) ----
 export const getCustomsPorts = async (req, res, next) => {
@@ -37,7 +38,6 @@ export const calculateCustoms = async (req, res, next) => {
         // 2. Calculate Clearance Charges (Base + Weight Surcharge from Slabs)
         let ratePerKg = 0;
         if (port.weightSlabs && port.weightSlabs.length > 0) {
-            // Find the highest slab that is less than or equal to current weight
             const applicableSlab = [...port.weightSlabs]
                 .sort((a, b) => b.minWeight - a.minWeight)
                 .find(s => weight >= s.minWeight);
@@ -63,7 +63,7 @@ export const calculateCustoms = async (req, res, next) => {
 
 export const createDeclaration = async (req, res, next) => {
     try {
-        const { portId, weight, cargoValue, description } = req.body;
+        const { portId, weight, cargoValue, description, paymentIntentId } = req.body;
         const port = await CustomsPort.findById(portId);
         if (!port) return res.status(404).json({ message: 'Port not found' });
 
@@ -86,7 +86,19 @@ export const createDeclaration = async (req, res, next) => {
             dutyAmount,
             clearanceCharges,
             totalAmount,
-            customer: req.user?._id
+            customer: req.user?.id
+        });
+
+        // Generate Automated Invoice
+        await Invoice.create({
+            customer: req.user.id,
+            serviceType: 'Customs Clearance',
+            bookingId: declaration.declarationNumber,
+            amount: totalAmount,
+            tax: 0, // Duty is already a tax-like fee
+            totalAmount: totalAmount,
+            status: 'Paid',
+            paymentIntentId
         });
 
         res.status(201).json(declaration);
@@ -95,9 +107,13 @@ export const createDeclaration = async (req, res, next) => {
 
 export const getDeclarations = async (req, res, next) => {
     try {
-        const declarations = await CustomsDeclaration.find({})
+        let query = {};
+        if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+            query.customer = req.user.id;
+        }
+
+        const declarations = await CustomsDeclaration.find(query)
             .populate('port')
-            .populate('customer', 'name email')
             .sort({ createdAt: -1 });
         res.json(declarations);
     } catch (error) { next(error); }

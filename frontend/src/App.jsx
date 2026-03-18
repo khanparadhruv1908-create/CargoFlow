@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { SignedIn, SignedOut, RedirectToSignIn, UserButton, useAuth } from '@clerk/clerk-react';
+import { setTokenGetter } from './services/api';
 
 // Components
 import Navbar from './components/Navbar';
@@ -15,9 +17,21 @@ import Register from './pages/Register';
 import Shipments from './pages/Shipments';
 import BookingDispatcher from './pages/BookingDispatcher';
 import TrackAWB from './pages/TrackAWB';
+import WarehouseStorage from './pages/WarehouseStorage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
+
+// Component to handle Clerk token and pass it to axios
+const TokenManager = () => {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setTokenGetter(getToken);
+  }, [getToken]);
+
+  return null;
+};
 
 // ScrollToTop component to reset scroll position on route change
 const ScrollToTop = () => {
@@ -30,22 +44,6 @@ const ScrollToTop = () => {
   return null;
 };
 
-// Protected Route Component
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
-
 // Layout wrapper to conditionally show/hide Navbar/Footer
 const AppLayout = () => {
   const location = useLocation();
@@ -54,6 +52,7 @@ const AppLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <TokenManager />
       <ScrollToTop />
       {!shouldHide && <Navbar />}
 
@@ -66,20 +65,31 @@ const AppLayout = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/track" element={<TrackAWB />} />
+          <Route path="/warehouse" element={<WarehouseStorage />} />
           <Route
             path="/shipments"
             element={
-              <ProtectedRoute>
-                <Shipments />
-              </ProtectedRoute>
+              <>
+                <SignedIn>
+                  <Shipments />
+                </SignedIn>
+                <SignedOut>
+                  <RedirectToSignIn />
+                </SignedOut>
+              </>
             }
           />
           <Route
             path="/book"
             element={
-              <ProtectedRoute>
-                <BookingDispatcher />
-              </ProtectedRoute>
+              <>
+                <SignedIn>
+                  <BookingDispatcher />
+                </SignedIn>
+                <SignedOut>
+                  <RedirectToSignIn />
+                </SignedOut>
+              </>
             }
           />
         </Routes>

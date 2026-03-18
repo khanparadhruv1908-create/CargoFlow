@@ -1,176 +1,147 @@
 import { useState, useMemo } from 'react';
-import { useShipments } from '../hooks/useShipments';
-import ShipmentTable from '../components/shipments/ShipmentTable';
-import ShipmentForm from '../components/shipments/ShipmentForm';
-import ShipmentDetails from '../components/shipments/ShipmentDetails';
-import { Search, Plus, Filter, RefreshCw, X } from 'lucide-react';
+import { useAllBookings } from '../hooks/useAllBookings';
+import { Search, Filter, RefreshCw, X, Package, Ship, Plane, Warehouse, FileText } from 'lucide-react';
+
+const TypeIcon = ({ type }) => {
+    switch (type) {
+        case 'Air Freight': return <Plane size={18} className="text-blue-500" />;
+        case 'Ocean Freight': return <Ship size={18} className="text-teal-500" />;
+        case 'Warehouse': return <Warehouse size={18} className="text-orange-500" />;
+        case 'Customs': return <FileText size={18} className="text-purple-500" />;
+        default: return <Package size={18} className="text-slate-500" />;
+    }
+};
 
 export default function Shipments() {
-    const { shipments, isLoading, isError, error, createShipment, updateShipment, deleteShipment, isCreating, isUpdating } = useShipments();
-
+    const { allBookings, isLoading } = useAllBookings();
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
+    const [typeFilter, setTypeFilter] = useState('');
 
-    // Modals state
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingShipment, setEditingShipment] = useState(null);
-    const [viewingShipment, setViewingShipment] = useState(null);
-
-    // Filters logic
-    const filteredShipments = useMemo(() => {
-        return shipments.filter(shipment => {
-            const matchesSearch = (shipment.shipmentId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                shipment.origin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                shipment.destination.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesStatus = statusFilter ? shipment.status === statusFilter : true;
-            return matchesSearch && matchesStatus;
+    const filteredBookings = useMemo(() => {
+        return allBookings.filter(booking => {
+            const matchesSearch = 
+                (booking.displayId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (booking.displayTitle || '').toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesType = typeFilter ? booking.type === typeFilter : true;
+            return matchesSearch && matchesType;
         });
-    }, [shipments, searchTerm, statusFilter]);
+    }, [allBookings, searchTerm, typeFilter]);
 
-    const handleOpenForm = (shipment = null) => {
-        setEditingShipment(shipment);
-        setIsFormOpen(true);
-    };
-
-    const handleCloseForm = () => {
-        setIsFormOpen(false);
-        setEditingShipment(null);
-    };
-
-    const handleFormSubmit = async (data) => {
-        if (editingShipment) {
-            await updateShipment({ id: editingShipment._id, data });
-        } else {
-            await createShipment(data);
-        }
-        handleCloseForm();
-    };
-
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this shipment?')) {
-            await deleteShipment(id);
-        }
-    };
-
-    if (isError) return (
-        <div className="flex justify-center items-center h-screen">
-            <div className="bg-red-50 text-red-500 p-6 rounded-lg text-center max-w-lg">
-                <h3 className="text-xl font-bold mb-2">Failed to load shipments</h3>
-                <p>{error?.message}</p>
-            </div>
+    if (isLoading) return (
+        <div className="flex justify-center items-center h-screen bg-slate-50">
+            <RefreshCw size={48} className="text-primary animate-spin" />
+            <span className="ml-4 text-xl font-bold text-slate-600">Loading your logistics dashboard...</span>
         </div>
     );
 
     return (
-        <div className="bg-gray-50 min-h-screen py-10 px-4 sm:px-6 lg:px-8 relative">
-            <div className="max-w-7xl mx-auto space-y-6">
-
-                {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Shipments</h1>
-                        <p className="mt-1 text-sm text-gray-500">Manage your fleet routing, track delivery times, and update logs in real-time.</p>
-                    </div>
-
-                    <button
-                        onClick={() => handleOpenForm()}
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                        <Plus size={20} className="mr-2" />
-                        New Shipment
-                    </button>
+        <div className="bg-slate-50 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto space-y-8">
+                
+                <div>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight font-outfit">My Logistics Dashboard</h1>
+                    <p className="mt-2 text-slate-500 font-medium">Unified view of all your air, ocean, warehouse, and customs bookings.</p>
                 </div>
 
-                {/* Filters & Search */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+                {/* Filters */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="relative w-full md:w-96">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search size={18} className="text-gray-400" />
-                        </div>
+                        <Search className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Search by ID, Origin, Destination..."
+                            placeholder="Search by ID, Route, or Service..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            className="pl-10 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary transition-all"
                         />
-                        {searchTerm && (
-                            <button
-                                onClick={() => setSearchTerm('')}
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                            >
-                                <X size={16} />
-                            </button>
-                        )}
                     </div>
 
-                    <div className="flex w-full md:w-auto items-center gap-3">
-                        <span className="text-sm font-medium text-gray-500 flex items-center">
-                            <Filter size={16} className="mr-1" />
-                            Status:
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                        <span className="text-sm font-bold text-slate-500 flex items-center">
+                            <Filter size={16} className="mr-2" /> Filter Service:
                         </span>
                         <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2"
+                            value={typeFilter}
+                            onChange={(e) => setTypeFilter(e.target.value)}
+                            className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl focus:ring-primary p-2.5 font-bold"
                         >
-                            <option value="">All Statuses</option>
-                            <option value="Pending">Pending</option>
-                            <option value="In Transit">In Transit</option>
-                            <option value="Delivered">Delivered</option>
-                            <option value="Delayed">Delayed</option>
+                            <option value="">All Services</option>
+                            <option value="Air Freight">Air Freight</option>
+                            <option value="Ocean Freight">Ocean Freight</option>
+                            <option value="Warehouse">Warehouse Storage</option>
+                            <option value="Customs">Customs Clearance</option>
+                            <option value="Shipment">Standard Shipments</option>
                         </select>
                     </div>
                 </div>
 
-                {/* content table */}
-                {isLoading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <RefreshCw size={36} className="text-blue-500 animate-spin" />
-                        <span className="ml-3 text-lg font-medium text-gray-500">Loading tracking data...</span>
-                    </div>
-                ) : (
-                    <ShipmentTable
-                        shipments={filteredShipments}
-                        onView={(ship) => setViewingShipment(ship)}
-                        onEdit={handleOpenForm}
-                        onDelete={handleDelete}
-                    />
-                )}
-            </div>
-
-            {/* Modals OVERLAYS */}
-            {(isFormOpen || viewingShipment) && (
-                <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-                        onClick={() => {
-                            if (isFormOpen) handleCloseForm();
-                            if (viewingShipment) setViewingShipment(null);
-                        }}
-                    />
-
-                    {/* Centered Modal Content */}
-                    <div className="relative z-[600] flex justify-center w-full">
-                        {isFormOpen && (
-                            <ShipmentForm
-                                defaultValues={editingShipment}
-                                onSubmit={handleFormSubmit}
-                                onCancel={handleCloseForm}
-                                submitting={isCreating || isUpdating}
-                            />
-                        )}
-
-                        {viewingShipment && (
-                            <ShipmentDetails
-                                shipment={viewingShipment}
-                                onClose={() => setViewingShipment(null)}
-                            />
-                        )}
+                {/* Unified Table */}
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-900 text-white">
+                                    <th className="px-6 py-4 font-bold uppercase text-xs tracking-wider">Service Type</th>
+                                    <th className="px-6 py-4 font-bold uppercase text-xs tracking-wider">Reference ID</th>
+                                    <th className="px-6 py-4 font-bold uppercase text-xs tracking-wider">Details</th>
+                                    <th className="px-6 py-4 font-bold uppercase text-xs tracking-wider">Status</th>
+                                    <th className="px-6 py-4 font-bold uppercase text-xs tracking-wider text-right">Date Created</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filteredBookings.length > 0 ? (
+                                    filteredBookings.map((booking) => (
+                                        <tr key={booking._id} className="hover:bg-slate-50/80 transition-colors group cursor-default">
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-white transition-colors">
+                                                        <TypeIcon type={booking.type} />
+                                                    </div>
+                                                    <span className="font-bold text-slate-700">{booking.type}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <span className="font-mono font-black text-primary bg-primary/5 px-2 py-1 rounded">
+                                                    {booking.displayId}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="text-slate-800 font-semibold">{booking.displayTitle}</div>
+                                                <div className="text-xs text-slate-500 font-medium">{booking.cargoType || booking.description || 'Logistics Service'}</div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-sm ${
+                                                    ['Delivered', 'Cleared', 'Released', 'Arrived'].includes(booking.status || booking.vesselStatus || booking.containerStatus)
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-blue-100 text-blue-700'
+                                                }`}>
+                                                    {booking.status || booking.vesselStatus || 'Active'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-5 text-right">
+                                                <div className="text-sm font-bold text-slate-600">{new Date(booking.createdAt).toLocaleDateString()}</div>
+                                                <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">
+                                                    {new Date(booking.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="px-6 py-20 text-center">
+                                            <div className="flex flex-col items-center">
+                                                <Package size={48} className="text-slate-200 mb-4" />
+                                                <h3 className="text-xl font-bold text-slate-400">No bookings found</h3>
+                                                <p className="text-slate-400 text-sm">Try adjusting your filters or search term.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            )}
-
+            </div>
         </div>
     );
 }

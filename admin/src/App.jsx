@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
+import { SignedIn, SignedOut, RedirectToSignIn, useAuth } from '@clerk/clerk-react';
+import { setTokenGetter } from './services/api';
 
 import AdminLayout from './components/dashboard/AdminLayout';
 import DashboardOverview from './modules/admin/DashboardOverview';
@@ -18,55 +21,60 @@ import WarehouseManagement from './modules/admin/WarehouseManagement';
 
 const queryClient = new QueryClient();
 
-// A simple login component placeholder (since we redirect unauthed users to frontend usually, or admin should have its own login)
+const TokenManager = () => {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setTokenGetter(getToken);
+  }, [getToken]);
+
+  return null;
+};
+
+// Admin Login component matching new UI
 const AdminLogin = () => {
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md text-center max-w-sm">
-        <h1 className="text-2xl font-bold mb-4">Admin Access Only</h1>
-        <p className="mb-4 text-gray-600">Please login from the main customer portal using an admin or manager account.</p>
-        <a href="http://localhost:5173/login" className="bg-blue-600 text-white px-4 py-2 rounded">Go to Login</a>
+    <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="bg-white p-8 rounded-xl shadow-xl border border-slate-100 text-center max-w-md w-full">
+        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+        </div>
+        <h1 className="text-2xl font-black text-slate-800 mb-2">Admin Portal</h1>
+        <p className="mb-8 text-slate-500 text-sm">Sign in via the main customer portal using an authorized administrator account to access this dashboard.</p>
+        <a href="http://localhost:5173/login" className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md shadow-blue-500/20">Go to Secure Login</a>
       </div>
     </div>
   );
 }
-
-// Protected Route Component for Admin
-const ProtectedAdminRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <div className="text-center p-8 bg-white shadow rounded">
-          <h2 className="text-xl font-bold text-red-600 mb-2">Access Denied</h2>
-          <p className="text-gray-600">You do not have permission to view this page.</p>
-        </div>
-      </div>
-    );
-  }
-
-  return children;
-};
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster position="top-right" />
       <Router>
+        <TokenManager />
         <Routes>
-          <Route path="/login" element={<AdminLogin />} />
+          <Route path="/login" element={
+            <>
+              <SignedIn>
+                  <Navigate to="/" replace />
+              </SignedIn>
+              <SignedOut>
+                  <AdminLogin />
+              </SignedOut>
+            </>
+          } />
           <Route
             path="/"
             element={
-              <ProtectedAdminRoute allowedRoles={['admin', 'manager']}>
-                <AdminLayout />
-              </ProtectedAdminRoute>
+              <>
+                <SignedIn>
+                  <AdminLayout />
+                </SignedIn>
+                <SignedOut>
+                  <Navigate to="/login" replace />
+                </SignedOut>
+              </>
             }
           >
             <Route index element={<DashboardOverview />} />

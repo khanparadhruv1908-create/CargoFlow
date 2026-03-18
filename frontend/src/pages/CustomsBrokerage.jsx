@@ -24,7 +24,7 @@ const CustomsBrokerage = () => {
     const { data: ports = [], isLoading: loadingPorts } = useQuery({
         queryKey: ['customs-ports'],
         queryFn: async () => {
-            const { data } = await api.get('/customs/ports');
+            const data = await api.get('/customs/ports');
             return data;
         }
     });
@@ -42,7 +42,7 @@ const CustomsBrokerage = () => {
         if (watchPortId && watchWeight > 0 && watchValue > 0) {
             const timer = setTimeout(async () => {
                 try {
-                    const { data } = await api.post('/customs/calculate', {
+                    const data = await api.post('/customs/calculate', {
                         portId: watchPortId,
                         weight: watchWeight,
                         cargoValue: watchValue
@@ -60,7 +60,7 @@ const CustomsBrokerage = () => {
 
     const declarationMutation = useMutation({
         mutationFn: async (formData) => {
-            const { data } = await api.post('/customs/declarations', formData);
+            const data = await api.post('/customs/declarations', formData);
             return data;
         },
         onSuccess: (data) => {

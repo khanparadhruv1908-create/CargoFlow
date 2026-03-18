@@ -20,7 +20,7 @@ router.route('/calculate')
 
 router.route('/declarations')
     .post(protect, createDeclaration)
-    .get(protect, authorize('admin', 'manager'), getDeclarations);
+    .get(protect, getDeclarations);
 
 router.route('/declarations/:id/status')
     .put(protect, authorize('admin', 'manager'), updateDeclarationStatus);

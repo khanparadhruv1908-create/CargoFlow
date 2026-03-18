@@ -1,4 +1,5 @@
 import { ContainerType, VesselSchedule, OceanBooking } from '../models/Ocean.js';
+import Invoice from '../models/Invoice.js';
 
 // ---- COINTAINER TYPES ----
 export const getContainerTypes = async (req, res, next) => {
@@ -49,7 +50,7 @@ export const deleteSchedule = async (req, res, next) => {
 // ---- OCEAN BOOKINGS ----
 export const createOceanBooking = async (req, res, next) => {
     try {
-        const { scheduleId, containerTypeId, weight, loadDate } = req.body;
+        const { scheduleId, containerTypeId, weight, loadDate, paymentIntentId } = req.body;
 
         const schedule = await VesselSchedule.findById(scheduleId);
         if (!schedule) return res.status(404).json({ message: 'Schedule not found' });
@@ -74,7 +75,19 @@ export const createOceanBooking = async (req, res, next) => {
             departureDate: dep,
             eta,
             totalCharges,
-            customer: req.user?._id
+            customer: req.user?.id
+        });
+
+        // Generate Automated Invoice
+        await Invoice.create({
+            customer: req.user.id,
+            serviceType: 'Ocean Freight',
+            bookingId: booking.bolNumber,
+            amount: totalCharges,
+            tax: totalCharges * 0.1,
+            totalAmount: totalCharges * 1.1,
+            status: 'Paid',
+            paymentIntentId
         });
 
         await booking.populate(['schedule', 'containerType']);
@@ -84,10 +97,14 @@ export const createOceanBooking = async (req, res, next) => {
 
 export const getOceanBookings = async (req, res, next) => {
     try {
-        const bookings = await OceanBooking.find({})
+        let query = {};
+        if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+            query.customer = req.user.id;
+        }
+
+        const bookings = await OceanBooking.find(query)
             .populate('schedule')
             .populate('containerType')
-            .populate('customer', 'name email')
             .sort({ createdAt: -1 });
         res.json(bookings);
     } catch (error) { next(error); }

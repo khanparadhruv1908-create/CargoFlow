@@ -1,7 +1,12 @@
 import mongoose from 'mongoose';
 
 const airBookingSchema = new mongoose.Schema({
-    awbNumber: { type: String, required: true, unique: true },
+    awbNumber: { 
+        type: String, 
+        required: true, 
+        unique: true,
+        default: () => 'AWB-' + Math.floor(10000000 + Math.random() * 90000000)
+    },
     origin: { type: String, required: true },
     destination: { type: String, required: true },
     airline: { type: mongoose.Schema.Types.ObjectId, ref: 'Airline', required: true },
@@ -15,13 +20,17 @@ const airBookingSchema = new mongoose.Schema({
         default: 'Scheduled'
     },
     eta: { type: Date },
-    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    customer: { type: String } // Clerk User ID
 }, { timestamps: true });
 
-airBookingSchema.pre('save', function (next) {
+airBookingSchema.pre('validate', function (next) {
     if (!this.awbNumber) {
-        this.awbNumber = 'AWB-' + Math.floor(10000000 + Math.random() * 90000000); // AWB-XXXXXXXX
+        this.awbNumber = 'AWB-' + Math.floor(10000000 + Math.random() * 90000000);
     }
+    next();
+});
+
+airBookingSchema.pre('save', function (next) {
     // calculate rough ETA (+3 days) if not provided
     if (!this.eta && this.shipmentDate) {
         const d = new Date(this.shipmentDate);

@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Package, LogOut, User } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, Package } from 'lucide-react';
+import { UserButton, useUser, SignedIn, SignedOut } from '@clerk/clerk-react';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
-
-    const [user, setUser] = useState(null);
-    const navigate = useNavigate();
+    const { user, isLoaded } = useUser();
 
     const getNavLinks = () => {
         let links = [
@@ -21,7 +20,10 @@ const Navbar = () => {
             links.push({ name: 'Shipments', path: '/shipments' });
         }
 
-        if (user && (user.role === 'admin' || user.role === 'manager')) {
+        // You might want to handle admin roles via Clerk metadata later
+        // For now, let's keep it simple or check a specific email/metadata if needed
+        const isAdmin = user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'manager';
+        if (isAdmin) {
             links.push({ name: 'Admin', path: 'http://localhost:5174/', external: true });
         }
 
@@ -29,20 +31,6 @@ const Navbar = () => {
     };
 
     const navLinks = getNavLinks();
-
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-    }, [location.pathname]);
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
-        navigate('/login');
-    };
 
     const isActive = (path) => {
         return location.pathname === path;
@@ -90,38 +78,35 @@ const Navbar = () => {
                             ))}
                         </div>
                         <div className="flex items-center space-x-4 ml-6 border-l border-gray-200 pl-6">
-                            {!user ? (
-                                <>
-                                    <Link
-                                        to="/login"
-                                        className="text-slate-600 hover:text-primary transition-colors duration-200 text-sm font-medium"
-                                    >
-                                        Login
-                                    </Link>
-                                    <Link
-                                        to="/register"
-                                        className="bg-primary hover:bg-primary-light text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5"
-                                    >
-                                        Register
-                                    </Link>
-                                </>
-                            ) : (
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-2 text-slate-700 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-                                        <div className="bg-primary/10 p-1 rounded-full">
-                                            <User className="h-4 w-4 text-primary" />
-                                        </div>
-                                        <span className="text-sm font-semibold">{user.name}</span>
-                                    </div>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="text-slate-500 hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg"
-                                        title="Logout"
-                                    >
-                                        <LogOut className="h-5 w-5" />
-                                    </button>
-                                </div>
-                            )}
+                            <SignedOut>
+                                <Link
+                                    to="/login"
+                                    className="text-slate-600 hover:text-primary transition-colors duration-200 text-sm font-medium"
+                                >
+                                    Login
+                                </Link>
+                                <Link
+                                    to="/register"
+                                    className="bg-primary hover:bg-primary-light text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5"
+                                >
+                                    Register
+                                </Link>
+                            </SignedOut>
+                            <SignedIn>
+                                <UserButton 
+                                    afterSignOutUrl="/"
+                                    appearance={{
+                                        elements: {
+                                            userButtonAvatarBox: 'w-10 h-10'
+                                        }
+                                    }}
+                                />
+                                {isLoaded && user && (
+                                    <span className="text-sm font-semibold text-slate-700 hidden lg:block">
+                                        {user.fullName || user.primaryEmailAddress?.emailAddress}
+                                    </span>
+                                )}
+                            </SignedIn>
                         </div>
                     </div>
 
@@ -165,41 +150,31 @@ const Navbar = () => {
                             )
                         ))}
                         <div className="pt-4 mt-4 border-t border-gray-100 flex flex-col space-y-3 px-4">
-                            {!user ? (
-                                <>
-                                    <Link
-                                        to="/login"
-                                        onClick={() => setIsOpen(false)}
-                                        className="w-full text-center text-slate-600 hover:text-primary font-medium py-2.5 bg-gray-50 rounded-lg"
-                                    >
-                                        Login
-                                    </Link>
-                                    <Link
-                                        to="/register"
-                                        onClick={() => setIsOpen(false)}
-                                        className="w-full text-center bg-primary text-white font-medium py-2.5 rounded-lg shadow-md"
-                                    >
-                                        Register
-                                    </Link>
-                                </>
-                            ) : (
-                                <div className="flex flex-col gap-3">
-                                    <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-lg">
-                                        <User className="h-5 w-5 text-primary" />
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-bold text-slate-900">{user.name}</span>
-                                            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">{user.role}</span>
-                                        </div>
+                            <SignedOut>
+                                <Link
+                                    to="/login"
+                                    onClick={() => setIsOpen(false)}
+                                    className="w-full text-center text-slate-600 hover:text-primary font-medium py-2.5 bg-gray-50 rounded-lg"
+                                >
+                                    Login
+                                </Link>
+                                <Link
+                                    to="/register"
+                                    onClick={() => setIsOpen(false)}
+                                    className="w-full text-center bg-primary text-white font-medium py-2.5 rounded-lg shadow-md"
+                                >
+                                    Register
+                                </Link>
+                            </SignedOut>
+                            <SignedIn>
+                                <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-lg">
+                                    <UserButton afterSignOutUrl="/" />
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-bold text-slate-900">{user?.fullName}</span>
+                                        <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">{user?.primaryEmailAddress?.emailAddress}</span>
                                     </div>
-                                    <button
-                                        onClick={() => { handleLogout(); setIsOpen(false); }}
-                                        className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 font-bold py-2.5 rounded-lg hover:bg-red-100 transition-colors"
-                                    >
-                                        <LogOut size={18} />
-                                        Logout
-                                    </button>
                                 </div>
-                            )}
+                            </SignedIn>
                         </div>
                     </div>
                 </div>

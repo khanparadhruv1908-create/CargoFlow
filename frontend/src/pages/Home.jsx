@@ -1,30 +1,32 @@
-import { ArrowRight, Plane, Ship, Truck, Clock, ShieldCheck, MapPin, Package as PackageIcon, ChevronRight, Activity, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowRight, Plane, Ship, Truck, Clock, ShieldCheck, MapPin, Package as PackageIcon, ChevronRight, Activity, Users, FileText, Warehouse } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import api from '../services/api';
 
-const features = [
-    {
-        icon: <Plane className="h-8 w-8 text-primary group-hover:text-white transition-colors duration-300" />,
-        title: 'Air Freight',
-        desc: 'Fastest delivery across the globe for time-sensitive cargo. Global reach with top-tier airlines.'
-    },
-    {
-        icon: <Ship className="h-8 w-8 text-primary group-hover:text-white transition-colors duration-300" />,
-        title: 'Ocean Freight',
-        desc: 'Cost-effective logistics for large-scale and bulk deliveries. Partnered with major ports.'
-    },
-    {
-        icon: <Truck className="h-8 w-8 text-primary group-hover:text-white transition-colors duration-300" />,
-        title: 'Road Transport',
-        desc: 'Reliable domestic delivery with extensive network reach and precise tracking systems.'
-    },
-    {
-        icon: <PackageIcon className="h-8 w-8 text-primary group-hover:text-white transition-colors duration-300" />,
-        title: 'Warehousing',
-        desc: 'Secure storage solutions tailored to your inventory needs. 24/7 security and management.'
-    }
-];
+const iconMap = {
+    Plane: Plane,
+    Ship: Ship,
+    Truck: Truck,
+    PackageIcon: PackageIcon,
+    Warehouse: Warehouse,
+    FileText: FileText
+};
 
 const Home = () => {
+    const [services, setServices] = useState([]);
+
+    useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                const data = await api.get('/services');
+                setServices(data.slice(0, 4)); // Show first 4 on home
+            } catch (err) {
+                console.error("Home: Failed to fetch services", err);
+            }
+        };
+        fetchServices();
+    }, []);
+
     return (
         <div className="flex flex-col min-h-screen">
             {/* Hero Section */}
@@ -70,7 +72,7 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Services Grid */}
+            {/* Services Grid - DYNAMIC */}
             <section className="py-24 bg-slate-50 relative">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16 max-w-2xl mx-auto">
@@ -79,25 +81,33 @@ const Home = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {features.map((feature, index) => (
-                            <div
-                                key={index}
-                                className="group bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl hover:shadow-primary/10 border border-slate-100 transition-all duration-500 hover:-translate-y-2 relative overflow-hidden"
-                            >
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+                        {services.length > 0 ? (
+                            services.map((service, index) => {
+                                const Icon = iconMap[service.icon] || PackageIcon;
+                                return (
+                                    <div
+                                        key={service._id}
+                                        className="group bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl hover:shadow-primary/10 border border-slate-100 transition-all duration-500 hover:-translate-y-2 relative overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
 
-                                <div className="w-16 h-16 rounded-2xl bg-slate-50 group-hover:bg-primary flex items-center justify-center mb-8 transition-colors duration-500">
-                                    {feature.icon}
-                                </div>
+                                        <div className="w-16 h-16 rounded-2xl bg-slate-50 group-hover:bg-primary flex items-center justify-center mb-8 transition-colors duration-500">
+                                            <Icon className="h-8 w-8 text-primary group-hover:text-white transition-colors duration-300" />
+                                        </div>
 
-                                <h4 className="text-xl font-bold text-slate-900 mb-4 group-hover:text-primary transition-colors duration-300">{feature.title}</h4>
-                                <p className="text-slate-600 leading-relaxed mb-6 group-hover:text-slate-700">{feature.desc}</p>
+                                        <h4 className="text-xl font-bold text-slate-900 mb-4 group-hover:text-primary transition-colors duration-300">{service.title}</h4>
+                                        <p className="text-slate-600 leading-relaxed mb-6 group-hover:text-slate-700 line-clamp-3">{service.description}</p>
 
-                                <Link to="/services" className="inline-flex items-center text-sm font-bold text-primary opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300">
-                                    Learn more <ChevronRight className="h-4 w-4 ml-1" />
-                                </Link>
-                            </div>
-                        ))}
+                                        <Link to="/services" className="inline-flex items-center text-sm font-bold text-primary opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300">
+                                            Learn more <ChevronRight className="h-4 w-4 ml-1" />
+                                        </Link>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            // Loading state placeholders
+                            [1,2,3,4].map(i => <div key={i} className="h-64 bg-white rounded-3xl animate-pulse border border-slate-100"></div>)
+                        )}
                     </div>
                 </div>
             </section>

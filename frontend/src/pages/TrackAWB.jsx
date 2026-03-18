@@ -1,216 +1,144 @@
 import { useState } from 'react';
-import { Search, MapPin, CheckCircle2, Package, Plane, Clock, AlertCircle, Ship, Anchor } from 'lucide-react';
+import { Search, MapPin, CheckCircle2, Package, Plane, Clock, AlertCircle, Ship, Navigation, Activity } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
-const TrackFreight = () => {
-    const [trackingNumber, setTrackingNumber] = useState('');
+const UniversalTracking = () => {
+    const [refId, setRefId] = useState('');
     const [trackingData, setTrackingData] = useState(null);
-    const [freightType, setFreightType] = useState('AIR'); // 'AIR' or 'OCEAN'
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSearch = async (e) => {
+    const handleTrack = async (e) => {
         e.preventDefault();
-        if (!trackingNumber.trim()) return;
+        if (!refId) return toast.error("Please enter a Reference ID (AWB or BOL)");
 
         setIsLoading(true);
         setTrackingData(null);
-
-        const isOcean = trackingNumber.toUpperCase().startsWith('BOL-');
-        setFreightType(isOcean ? 'OCEAN' : 'AIR');
-
         try {
-            const endpoint = isOcean
-                ? `/ocean/bookings/track/${trackingNumber.toUpperCase()}`
-                : `/air-bookings/track/${trackingNumber.toUpperCase()}`;
-
-            const { data } = await api.get(endpoint);
+            const data = await api.get(`/track/${refId}`);
             setTrackingData(data);
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Tracking Number not recognized');
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Tracking ID not found.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    const getStatusStyle = (statusLabel) => {
-        const statusMap = {
-            'Scheduled': 'bg-blue-100 text-blue-700',
-            'Pending': 'bg-gray-100 text-gray-700',
-            'Loaded': 'bg-indigo-100 text-indigo-700',
-            'Departed': 'bg-blue-100 text-blue-700',
-            'In Transit': 'bg-orange-100 text-orange-700',
-            'Discharged': 'bg-yellow-100 text-yellow-700',
-            'Delivered': 'bg-green-100 text-green-700',
-            'Arrived': 'bg-green-100 text-green-700',
-            'Delayed': 'bg-red-100 text-red-700'
-        };
-        return statusMap[statusLabel] || 'bg-slate-100 text-slate-700';
-    };
-
-    const getAppIcon = (statusLabel) => {
-        switch (statusLabel) {
-            case 'Scheduled': return <Clock className="w-6 h-6" />;
-            case 'In Transit': return freightType === 'AIR' ? <Plane className="w-6 h-6" /> : <Ship className="w-6 h-6" />;
-            case 'Loaded': return <Anchor className="w-6 h-6" />;
-            case 'Departed': return <Ship className="w-6 h-6" />;
-            case 'Delivered':
-            case 'Arrived': return <CheckCircle2 className="w-6 h-6" />;
-            case 'Delayed': return <AlertCircle className="w-6 h-6" />;
-            default: return <Package className="w-6 h-6" />;
-        }
-    };
-
-    const originName = freightType === 'OCEAN' ? trackingData?.schedule?.originPort : trackingData?.origin;
-    const destName = freightType === 'OCEAN' ? trackingData?.schedule?.destPort : trackingData?.destination;
-
     return (
-        <div className="min-h-screen bg-slate-50 relative overflow-hidden flex flex-col items-center">
-            {/* Header Background */}
-            <div className="absolute top-0 left-0 right-0 h-96 bg-slate-900 border-b-4 border-primary">
-                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary via-slate-900 to-slate-900 blur-2xl"></div>
-            </div>
-
-            <div className="relative w-full max-w-4xl px-4 sm:px-6 py-20 z-10">
+        <div className="min-h-screen bg-slate-50 py-16 px-4">
+            <div className="max-w-4xl mx-auto">
+                
+                {/* Search Header */}
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4 font-outfit">Track Shipment</h1>
-                    <p className="text-slate-300 text-lg">Enter your Air Way Bill (AWB) or Bill of Lading (BOL) Number</p>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-black uppercase tracking-widest text-[10px] mb-4">
+                        <Activity size={14} /> Global Logistics Radar
+                    </div>
+                    <h1 className="text-5xl font-black text-slate-900 font-outfit uppercase tracking-tighter mb-4">Universal Tracking</h1>
+                    <p className="text-slate-500 font-medium max-w-xl mx-auto">
+                        Enter your Air Waybill (AWB) or Bill of Lading (BOL) to get real-time status and location updates.
+                    </p>
                 </div>
 
-                {/* Search Box */}
-                <form onSubmit={handleSearch} className="bg-white p-3 rounded-2xl shadow-xl flex flex-col md:flex-row gap-4 mb-12 border border-slate-100">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                        <input
+                {/* Input Section */}
+                <div className="bg-white p-2 rounded-[2rem] shadow-2xl border border-slate-100 flex flex-col md:flex-row gap-2 mb-12">
+                    <div className="flex-grow relative">
+                        <Search className="absolute left-6 top-5 text-slate-400" size={24} />
+                        <input 
                             type="text"
-                            value={trackingNumber}
-                            onChange={(e) => setTrackingNumber(e.target.value)}
-                            placeholder="Enter AWB-XXXX or BOL-XXXX"
-                            disabled={isLoading}
-                            className="w-full pl-12 pr-4 py-4 text-lg bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none uppercase font-mono tracking-widest"
+                            value={refId}
+                            onChange={(e) => setRefId(e.target.value.toUpperCase())}
+                            placeholder="Enter AWB-XXXXXXXX or BOL-XXXXXXXX..."
+                            className="w-full pl-16 pr-6 py-5 bg-transparent text-lg font-bold text-slate-800 outline-none placeholder:text-slate-300"
                         />
                     </div>
-                    <button
-                        type="submit"
-                        disabled={isLoading || !trackingNumber}
-                        className="bg-primary hover:bg-primary-light text-white font-bold py-4 px-10 rounded-xl transition-all disabled:opacity-75 shadow-md flex-shrink-0"
+                    <button 
+                        onClick={handleTrack}
+                        disabled={isLoading}
+                        className="bg-slate-900 text-white font-black px-10 py-5 rounded-[1.5rem] hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-200"
                     >
-                        {isLoading ? 'Searching...' : 'Track'}
+                        {isLoading ? <RefreshCw className="animate-spin" /> : <Navigation size={20} />}
+                        TRACK SHIPMENT
                     </button>
-                </form>
+                </div>
 
-                {/* Tracking Result */}
+                {/* Results Display */}
                 {trackingData && (
-                    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
-
-                        {/* Status Header */}
-                        <div className="bg-slate-50 p-6 md:p-8 flex items-center justify-between gap-6 border-b border-slate-200">
-                            {freightType === 'OCEAN' ? (
-                                <div className="flex flex-col md:flex-row gap-6 w-full justify-between items-center">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-4 rounded-xl shadow-sm ${getStatusStyle(trackingData.vesselStatus)}`}>
-                                            <Ship className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-semibold text-slate-500 tracking-wider uppercase">Vessel Status</div>
-                                            <div className="text-xl font-bold">{trackingData.vesselStatus}</div>
-                                        </div>
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        {/* Summary Card */}
+                        <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
+                            <div className="bg-slate-900 p-10 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                <div>
+                                    <div className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] mb-2">
+                                        {trackingData.type === 'Air Freight' ? <Plane size={14} /> : <Ship size={14} />}
+                                        {trackingData.type}
                                     </div>
-
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-4 rounded-xl shadow-sm ${getStatusStyle(trackingData.containerStatus)}`}>
-                                            <Package className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-semibold text-slate-500 tracking-wider uppercase">Container Status</div>
-                                            <div className="text-xl font-bold">{trackingData.containerStatus}</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="text-right flex-shrink-0">
-                                        <div className="text-sm font-semibold text-slate-500 tracking-wider">BOL NUMBER</div>
-                                        <div className="text-2xl font-bold font-mono tracking-wider text-teal-600 border border-teal-200 bg-teal-50 px-3 py-1 rounded inline-block">
-                                            {trackingData.bolNumber}
-                                        </div>
-                                    </div>
+                                    <h2 className="text-3xl font-black font-mono">{trackingData.referenceId}</h2>
+                                    <p className="text-slate-400 font-bold text-xs mt-1 uppercase">Carrier: {trackingData.carrier}</p>
                                 </div>
-                            ) : (
-                                <div className="flex w-full justify-between items-center">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-4 rounded-xl shadow-sm ${getStatusStyle(trackingData.status)}`}>
-                                            {getAppIcon(trackingData.status)}
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-semibold text-slate-500 tracking-wider">STATUS</div>
-                                            <div className={`text-2xl font-black ${trackingData.status === 'Delivered' ? 'text-green-600' : 'text-slate-800'}`}>
-                                                {trackingData.status}
-                                            </div>
-                                        </div>
+                                <div className="text-right">
+                                    <div className={`px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest shadow-lg ${
+                                        trackingData.status === 'Arrived' || trackingData.status === 'Delivered' 
+                                        ? 'bg-emerald-500 text-white' 
+                                        : 'bg-primary text-white'
+                                    }`}>
+                                        {trackingData.status}
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-sm font-semibold text-slate-500 tracking-wider">AWB NUMBER</div>
-                                        <div className="text-2xl font-bold font-mono tracking-wider text-primary">{trackingData.awbNumber}</div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Route mapping */}
-                        <div className="p-8 pb-10">
-                            <div className="flex flex-col sm:flex-row items-center justify-between mb-8 relative px-4">
-                                <div className="absolute left-16 right-16 top-8 h-0.5 border-t-2 border-dashed border-slate-200 z-0 hidden sm:block">
-                                    {freightType === 'OCEAN' ? (
-                                        <Ship className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-teal-400 w-8 h-8 bg-white px-1" />
-                                    ) : (
-                                        <Plane className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-300 w-8 h-8 bg-white px-1" />
-                                    )}
-                                </div>
-                                <div className="relative z-10 flex flex-col items-center sm:items-start mb-6 sm:mb-0">
-                                    <div className="w-16 h-16 bg-slate-50 border-2 border-slate-200 rounded-full flex items-center justify-center mb-3">
-                                        <MapPin className="text-slate-500 h-6 w-6" />
-                                    </div>
-                                    <span className="font-bold text-slate-800 text-center sm:text-left">{originName}</span>
-                                    <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mt-1">Origin</span>
-                                </div>
-
-                                <div className="relative z-10 flex flex-col items-center sm:items-end">
-                                    <div className={`w-16 h-16 border-2 rounded-full flex items-center justify-center mb-3 shadow-lg ${freightType === 'OCEAN' ? 'bg-teal-900 border-teal-900' : 'bg-slate-900 border-slate-900'}`}>
-                                        <MapPin className="text-white h-6 w-6" />
-                                    </div>
-                                    <span className="font-bold text-slate-800 text-center sm:text-right">{destName}</span>
-                                    <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mt-1">Destination</span>
+                                    <p className="text-slate-400 text-[10px] font-bold mt-2 uppercase">Last Update: {new Date(trackingData.lastUpdate).toLocaleString()}</p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                <div>
-                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
-                                        {freightType === 'AIR' ? 'Airline' : 'Vessel'}
+                            <div className="p-10">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-12 border-b border-slate-50 pb-10 mb-10">
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Origin</span>
+                                        <div className="text-xl font-black text-slate-900">{trackingData.origin}</div>
                                     </div>
-                                    <div className="font-semibold text-slate-800">
-                                        {freightType === 'AIR' ? trackingData.airline.name : trackingData.schedule.vesselName}
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Destination</span>
+                                        <div className="text-xl font-black text-slate-900">{trackingData.destination}</div>
                                     </div>
-                                </div>
-                                <div>
-                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
-                                        {freightType === 'AIR' ? 'Cargo Type' : 'Container'}
-                                    </div>
-                                    <div className="font-semibold text-slate-800">
-                                        {freightType === 'AIR' ? trackingData.cargoType : trackingData.containerType.name}
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Estimated Arrival</span>
+                                        <div className="text-xl font-black text-indigo-600">{new Date(trackingData.eta).toLocaleDateString()}</div>
                                     </div>
                                 </div>
-                                <div>
-                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Weight</div>
-                                    <div className="font-semibold text-slate-800">{trackingData.weight} kg</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Estimated Arrival</div>
-                                    <div className={`font-black ${freightType === 'OCEAN' ? 'text-teal-600' : 'text-primary'}`}>
-                                        {new Date(trackingData.eta).toLocaleDateString()}
+
+                                {/* Visual Timeline */}
+                                <div className="space-y-10">
+                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Operational Timeline</h3>
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-0 bottom-0 w-1 bg-slate-100 rounded-full"></div>
+                                        <div className="space-y-12">
+                                            {trackingData.timeline.map((event, idx) => (
+                                                <div key={idx} className="relative pl-12 flex items-start group">
+                                                    <div className={`absolute left-0 w-9 h-9 rounded-full border-4 border-white flex items-center justify-center transition-all ${
+                                                        event.completed ? 'bg-emerald-500 text-white scale-110 shadow-lg shadow-emerald-100' : 'bg-slate-200 text-white'
+                                                    }`}>
+                                                        <CheckCircle2 size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className={`text-sm font-black uppercase tracking-tight ${event.completed ? 'text-slate-900' : 'text-slate-400'}`}>
+                                                            {event.status}
+                                                        </h4>
+                                                        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">
+                                                            {event.location} • {new Date(event.date).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {/* Empty State */}
+                {!trackingData && !isLoading && (
+                    <div className="text-center py-20 opacity-20 flex flex-col items-center">
+                        <Package size={80} className="text-slate-900 mb-4" />
+                        <p className="font-black text-xl uppercase tracking-widest">Awaiting Manifest Entry</p>
                     </div>
                 )}
             </div>
@@ -218,4 +146,4 @@ const TrackFreight = () => {
     );
 };
 
-export default TrackFreight;
+export default UniversalTracking;

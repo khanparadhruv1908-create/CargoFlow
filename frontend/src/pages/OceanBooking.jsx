@@ -9,7 +9,7 @@ import { Ship, ChevronRight, CheckCircle2, Weight, MapPin, Calendar, Anchor, Fil
 import api from '../services/api';
 
 const bookingSchema = z.object({
-    scheduleId: z.string().min(1, "Please select an available vessel route"),
+    scheduleId: z.string().min(1, "Please select an available port route"),
     containerTypeId: z.string().min(1, "Please select a container type"),
     weight: z.number({ invalid_type_error: "Weight must be a number" }).min(1, "Weight is mandatory"),
     loadDate: z.string().min(1, "Vessel Load Date is required"),
@@ -24,7 +24,7 @@ const OceanBooking = () => {
     const { data: containers = [], isLoading: loadingContainers } = useQuery({
         queryKey: ['ocean-containers'],
         queryFn: async () => {
-            const { data } = await api.get('/ocean/containers');
+            const data = await api.get('/ocean/containers');
             return data;
         }
     });
@@ -32,7 +32,7 @@ const OceanBooking = () => {
     const { data: schedules = [], isLoading: loadingSchedules } = useQuery({
         queryKey: ['ocean-schedules'],
         queryFn: async () => {
-            const { data } = await api.get('/ocean/schedules');
+            const data = await api.get('/ocean/schedules');
             return data;
         }
     });
@@ -62,13 +62,19 @@ const OceanBooking = () => {
 
     const bookMutation = useMutation({
         mutationFn: async (bookingData) => {
-            const { data } = await api.post('/ocean/bookings', bookingData);
+            console.log('Sending Ocean Booking:', bookingData);
+            const data = await api.post('/ocean/bookings', bookingData);
             return data;
         },
         onSuccess: (data) => {
+            console.log('Ocean Booking SUCCESS Response:', data);
             setBookingResult(data);
             setStep(3); // Success/BOL choice step
             toast.success("Container booked successfully!");
+            // Auto-redirect after 30 seconds if no BOL choice made (longer for review)
+            setTimeout(() => {
+                navigate('/shipments');
+            }, 30000);
         },
         onError: (err) => {
             toast.error(err.response?.data?.message || "Failed to create ocean booking");
@@ -139,7 +145,7 @@ const OceanBooking = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Select Vessel Route (Origin → Destination)</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Select Port Route (Origin → Destination)</label>
                                     <div className="relative">
                                         <MapPin className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
                                         <select {...register('scheduleId')} className="pl-10 w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500">
@@ -286,6 +292,15 @@ const OceanBooking = () => {
                                         <div className="text-xs text-slate-500">Requires physical paper surrender. Used for Letter of Credit.</div>
                                     </button>
                                 </div>
+                            </div>
+
+                            <div className="mt-8 flex justify-center">
+                                <button 
+                                    onClick={() => navigate('/shipments')}
+                                    className="text-slate-500 hover:text-teal-600 font-bold text-sm transition-colors"
+                                >
+                                    Skip and View Dashboard →
+                                </button>
                             </div>
                         </div>
                     )}

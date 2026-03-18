@@ -20,7 +20,7 @@ router.route('/calculate')
 
 router.route('/bookings')
     .post(protect, createStorageBooking)
-    .get(protect, authorize('admin', 'manager'), getStorageBookings);
+    .get(protect, getStorageBookings);
 
 router.route('/bookings/:id/status')
     .put(protect, authorize('admin', 'manager'), updateStorageStatus);

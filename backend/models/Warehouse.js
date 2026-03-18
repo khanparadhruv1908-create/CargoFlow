@@ -8,7 +8,7 @@ const warehouseSchema = new mongoose.Schema({
         address: { type: String, required: true }
     },
     capacity: { type: Number, required: true },
-    manager: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    manager: { type: String } // Clerk ID
 }, { timestamps: true });
 
 const Warehouse = mongoose.model('Warehouse', warehouseSchema);

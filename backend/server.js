@@ -19,6 +19,7 @@ import serviceRoutes from './routes/serviceRoutes.js';
 import airlineRoutes from './routes/airlineRoutes.js';
 import airBookingRoutes from './routes/airBookingRoutes.js';
 import oceanRoutes from './routes/oceanRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 connectDB();
 
@@ -54,7 +55,7 @@ io.on('connection', (socket) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/shipments', shipmentRoutes);
-app.use('/api/tracking', trackingRoutes);
+app.use('/api/track', trackingRoutes);
 app.use('/api/invoices', billingRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/airlines', airlineRoutes);
@@ -62,6 +63,7 @@ app.use('/api/air-bookings', airBookingRoutes);
 app.use('/api/ocean', oceanRoutes);
 app.use('/api/customs', customsRoutes);
 app.use('/api/warehouse', warehouseRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Error Handling
 app.use(notFound);

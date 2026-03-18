@@ -25,7 +25,7 @@ router.route('/schedules/:id')
 // Bookings
 router.route('/bookings')
     .post(protect, createOceanBooking)
-    .get(protect, authorize('admin', 'manager'), getOceanBookings);
+    .get(protect, getOceanBookings);
 
 // Track
 router.route('/bookings/track/:bol')

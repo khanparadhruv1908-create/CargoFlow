@@ -5,12 +5,25 @@ const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
-// Request interceptor to attach JWT token
+// We need a way to set the token from Clerk
+let getTokenFunction = null;
+
+export const setTokenGetter = (fn) => {
+    getTokenFunction = fn;
+};
+
+// Request interceptor to attach JWT token from Clerk
 api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+    async (config) => {
+        if (getTokenFunction) {
+            try {
+                const token = await getTokenFunction();
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+            } catch (error) {
+                console.error("Error getting Clerk token", error);
+            }
         }
         return config;
     },
@@ -27,12 +40,9 @@ api.interceptors.response.use(
         toast.error(message);
 
         if (error.response?.status === 401) {
-            // Clear token and redirect to login if unauthorized
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            // Use window.location as we're outside of React Router context
+            // Unauthorized - Clerk handles auth state, but we might want to redirect if not already on login
             if (!window.location.pathname.includes('/login')) {
-                window.location.href = '/login';
+                // window.location.href = '/login';
             }
         }
 

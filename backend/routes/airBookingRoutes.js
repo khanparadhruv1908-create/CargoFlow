@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.route('/')
     .post(protect, createAirBooking)
-    .get(protect, authorize('admin', 'manager'), getAirBookings);
+    .get(protect, getAirBookings);
 
 router.route('/track/:awbNumber')
     .get(trackAirBooking);

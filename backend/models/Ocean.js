@@ -28,7 +28,7 @@ const oceanBookingSchema = new mongoose.Schema({
     bolOption: { type: String, enum: ['Sea Way Bill', 'Original Bill of Lading', 'Pending'], default: 'Pending' },
     containerStatus: { type: String, enum: ['Pending', 'Loaded', 'Discharged', 'Delivered'], default: 'Pending' },
     vesselStatus: { type: String, enum: ['Scheduled', 'Departed', 'In Transit', 'Arrived'], default: 'Scheduled' },
-    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    customer: { type: String } // Clerk User ID
 }, { timestamps: true });
 
 oceanBookingSchema.pre('save', function (next) {

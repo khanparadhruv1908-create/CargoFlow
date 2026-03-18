@@ -11,7 +11,7 @@ import api from '../services/api';
 const bookingSchema = z.object({
     origin: z.string().min(1, "Origin is required"),
     destination: z.string().min(1, "Destination is required"),
-    airlineId: z.string().min(1, "Please select an airline"),
+    airlineId: z.string().min(1, "Please select an airline partner"),
     weight: z.number({ invalid_type_error: "Weight must be a number" }).min(1, "Weight is mandatory"),
     cargoType: z.string().min(1, "Cargo type is required"),
     shipmentDate: z.string().min(1, "Date is required"),
@@ -26,7 +26,7 @@ const FlightBooking = () => {
     const { data: airlines = [], isLoading: isLoadingAirlines } = useQuery({
         queryKey: ['airlines'],
         queryFn: async () => {
-            const { data } = await api.get('/airlines');
+            const data = await api.get('/airlines');
             return data;
         }
     });
@@ -40,13 +40,18 @@ const FlightBooking = () => {
 
     const bookMutation = useMutation({
         mutationFn: async (bookingData) => {
-            const { data } = await api.post('/air-bookings', bookingData);
+            console.log('Sending Air Booking:', bookingData);
+            const data = await api.post('/air-bookings', bookingData);
             return data;
         },
         onSuccess: (data) => {
             setBookingResult(data);
             setStep(3); // Success step
             toast.success("Flight booked successfully!");
+            // Auto-redirect after 15 seconds to success dashboard
+            setTimeout(() => {
+                navigate('/shipments');
+            }, 15000);
         },
         onError: (err) => {
             toast.error(err.response?.data?.message || "Failed to create booking");
@@ -120,7 +125,7 @@ const FlightBooking = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Select Airline</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Select Airline Partner</label>
                                     <select {...register('airlineId')} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                                         <option value="">-- Choose Airline --</option>
                                         {airlines.map(a => (

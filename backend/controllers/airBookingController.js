@@ -1,12 +1,13 @@
 import AirBooking from '../models/AirBooking.js';
 import Airline from '../models/Airline.js';
+import Invoice from '../models/Invoice.js';
 
 // @desc    Create a new AirBooking
 // @route   POST /api/air-bookings
 // @access  Private
 export const createAirBooking = async (req, res, next) => {
     try {
-        const { origin, destination, airlineId, weight, cargoType, shipmentDate } = req.body;
+        const { origin, destination, airlineId, weight, cargoType, shipmentDate, paymentIntentId } = req.body;
 
         if (!weight) return res.status(400).json({ message: 'Cargo weight is mandatory' });
 
@@ -23,10 +24,22 @@ export const createAirBooking = async (req, res, next) => {
             cargoType,
             shipmentDate,
             totalCharges,
-            customer: req.user?._id
+            customer: req.user?.id
         });
 
         const createdBooking = await booking.save();
+
+        // Generate Automated Invoice
+        await Invoice.create({
+            customer: req.user.id,
+            serviceType: 'Air Freight',
+            bookingId: createdBooking.awbNumber,
+            amount: totalCharges,
+            tax: totalCharges * 0.1, // 10% mock tax
+            totalAmount: totalCharges * 1.1,
+            status: 'Paid',
+            paymentIntentId
+        });
 
         // Populate airline details before returning to show name
         await createdBooking.populate('airline', 'name pricePerKg');
@@ -42,7 +55,15 @@ export const createAirBooking = async (req, res, next) => {
 // @access  Private/Admin
 export const getAirBookings = async (req, res, next) => {
     try {
-        const bookings = await AirBooking.find({}).populate('airline', 'name').populate('customer', 'name email').sort({ createdAt: -1 });
+        let query = {};
+        // If not admin/manager, only show own bookings
+        if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+            query.customer = req.user.id;
+        }
+
+        const bookings = await AirBooking.find(query)
+            .populate('airline', 'name')
+            .sort({ createdAt: -1 });
         res.json(bookings);
     } catch (error) {
         next(error);
