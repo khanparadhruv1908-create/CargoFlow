@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton } from '@mui/material';
-import { Landmark, Plus, Trash2, Gavel, Scale, Coins, ShieldCheck, MapPin, DollarSign, Calculator } from 'lucide-react';
+import { Landmark, Trash2, Gavel, Coins, MapPin, DollarSign, Calculator } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -15,12 +15,12 @@ export default function CustomsManagement() {
     const [duty, setDuty] = useState('');
     const [slabs, setSlabs] = useState([{ minWeight: 0, ratePerKg: 1 }]);
 
-    const { data: ports = [], isLoading: loadingPorts } = useQuery({
+    const { data: ports = [] } = useQuery({
         queryKey: ['customs-ports'],
         queryFn: async () => await api.get('/customs/ports')
     });
 
-    const { data: declarations = [], isLoading: loadingDec } = useQuery({
+    const { data: declarations = [] } = useQuery({
         queryKey: ['customs-declarations'],
         queryFn: async () => await api.get('/customs/declarations')
     });
@@ -138,7 +138,7 @@ export default function CustomsManagement() {
                                 <th className="px-4 py-3 text-right text-[9px] font-black text-slate-400 uppercase"></th>
                             </TableRow></TableHead>
                             <TableBody>
-                                {ports.map(p => (
+                                {ports?.map(p => (
                                     <TableRow key={p._id} hover className="group">
                                         <TableCell className="px-4 py-4">
                                             <div className="font-black text-slate-800 text-xs">{p.name}</div>
@@ -174,7 +174,7 @@ export default function CustomsManagement() {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody className="divide-y divide-slate-50">
-                                    {declarations.map(dec => (
+                                    {declarations?.map(dec => (
                                         <TableRow key={dec._id} hover className="group transition-colors">
                                             <TableCell className="px-4 py-5">
                                                 <div className="font-mono font-black text-amber-600 bg-amber-50 px-2 py-1 rounded inline-block text-xs">
@@ -186,12 +186,12 @@ export default function CustomsManagement() {
                                                     <MapPin size={10} className="text-slate-400"/> {dec.port?.name}
                                                 </div>
                                                 <div className="text-[10px] text-slate-400 font-bold mt-1">
-                                                    {dec.weight}kg | VAL: ${dec.cargoValue.toLocaleString()}
+                                                    {dec.weight}kg | VAL: ${dec.cargoValue?.toLocaleString() || '0'}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="px-4 py-5">
-                                                <div className="text-[10px] font-bold text-slate-500 uppercase">Duty: +${dec.dutyAmount.toFixed(2)}</div>
-                                                <div className="text-sm font-black text-slate-900 mt-0.5">${dec.totalAmount.toFixed(2)}</div>
+                                                <div className="text-[10px] font-bold text-slate-500 uppercase">Duty: +${dec.dutyAmount?.toFixed(2) || '0.00'}</div>
+                                                <div className="text-sm font-black text-slate-900 mt-0.5">${dec.totalAmount?.toFixed(2) || '0.00'}</div>
                                             </TableCell>
                                             <TableCell className="px-4 py-5" align="right">
                                                 <select
@@ -211,7 +211,7 @@ export default function CustomsManagement() {
                                             </TableCell>
                                         </TableRow>
                                     ))}
-                                    {declarations.length === 0 && (
+                                    {declarations?.length === 0 && (
                                         <TableRow><TableCell colSpan={4} className="px-6 py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">No active declarations</TableCell></TableRow>
                                     )}
                                 </TableBody>

@@ -37,7 +37,12 @@ api.interceptors.response.use(
     (response) => response.data,
     (error) => {
         const message = error.response?.data?.message || 'An unexpected error occurred';
-        toast.error(message);
+        
+        // Prevent toast spam (multiple requests failing at once)
+        if (!window.lastErrorToast || Date.now() - window.lastErrorToast > 3000) {
+            toast.error(message);
+            window.lastErrorToast = Date.now();
+        }
 
         if (error.response?.status === 401) {
             // Unauthorized - Clerk handles auth state, but we might want to redirect if not already on login

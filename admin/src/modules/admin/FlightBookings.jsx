@@ -44,7 +44,7 @@ export default function FlightBookings() {
                         </TableRow>
                     </TableHead>
                     <TableBody className="divide-y divide-slate-50">
-                        {bookings.map((book) => (
+                        {bookings?.map((book) => (
                             <TableRow key={book._id} hover className="group transition-colors">
                                 <TableCell className="px-6 py-6">
                                     <div className="font-mono font-black text-primary bg-primary/5 px-2 py-1 rounded inline-block text-xs uppercase">
@@ -97,7 +97,7 @@ export default function FlightBookings() {
                                 </TableCell>
                             </TableRow>
                         ))}
-                        {bookings.length === 0 && (
+                        {bookings?.length === 0 && (
                             <TableRow><TableCell colSpan={5} className="px-6 py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">No active flight bookings</TableCell></TableRow>
                         )}
                     </TableBody>

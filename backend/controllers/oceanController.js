@@ -92,7 +92,10 @@ export const createOceanBooking = async (req, res, next) => {
 
         await booking.populate(['schedule', 'containerType']);
         res.status(201).json(booking);
-    } catch (error) { next(error); }
+    } catch (error) {
+        console.error("Ocean Booking Error:", error.message);
+        res.status(500).json({ message: error.message });
+    }
 };
 
 export const getOceanBookings = async (req, res, next) => {
@@ -115,7 +118,6 @@ export const trackOceanBooking = async (req, res, next) => {
         const booking = await OceanBooking.findOne({ bolNumber: req.params.bol })
             .populate('schedule')
             .populate('containerType')
-            .populate('customer', 'name email');
         if (!booking) return res.status(404).json({ message: 'Bill of Lading not found' });
         res.json(booking);
     } catch (error) { next(error); }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton } from '@mui/material';
-import { Plane, Plus, Trash2, DollarSign, Activity, Hash } from 'lucide-react';
+import { Plane, Plus, Trash2, DollarSign, Activity } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -10,7 +10,7 @@ export default function Airlines() {
     const [name, setName] = useState('');
     const [pricePerKg, setPricePerKg] = useState('');
 
-    const { data: airlines = [], isLoading } = useQuery({
+    const { data: airlines = [] } = useQuery({
         queryKey: ['airlines'],
         queryFn: async () => await api.get('/airlines')
     });
@@ -51,7 +51,7 @@ export default function Airlines() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
+
                 {/* 1. CONFIGURATION PANEL */}
                 <div className="lg:col-span-4 space-y-6">
                     <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">
@@ -59,16 +59,16 @@ export default function Airlines() {
                         <h3 className="font-black text-slate-800 mb-8 flex items-center gap-2 uppercase tracking-widest text-[10px]">
                             <Plus className="text-primary w-4 h-4" /> Add Airline Partner
                         </h3>
-                        
+
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Airline Company</label>
-                                <input 
-                                    type="text" 
-                                    value={name} 
-                                    onChange={e => setName(e.target.value)} 
-                                    className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:border-primary focus:bg-white transition-all outline-none" 
-                                    placeholder="e.g. Qatar Airways" 
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                    className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:border-primary focus:bg-white transition-all outline-none"
+                                    placeholder="e.g. Qatar Airways"
                                 />
                             </div>
 
@@ -76,23 +76,23 @@ export default function Airlines() {
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Standard Rate ($/kg)</label>
                                 <div className="relative">
                                     <div className="absolute left-4 top-4 text-slate-400 font-black">$</div>
-                                    <input 
-                                        type="number" 
-                                        step="0.01" 
-                                        value={pricePerKg} 
-                                        onChange={e => setPricePerKg(e.target.value)} 
-                                        className="w-full p-4 pl-8 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:border-primary focus:bg-white transition-all outline-none" 
-                                        placeholder="0.00" 
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={pricePerKg}
+                                        onChange={e => setPricePerKg(e.target.value)}
+                                        className="w-full p-4 pl-8 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:border-primary focus:bg-white transition-all outline-none"
+                                        placeholder="0.00"
                                     />
                                 </div>
                             </div>
 
-                            <Button 
-                                type="submit" 
-                                variant="contained" 
-                                fullWidth 
-                                disabled={createMutation.isPending} 
-                                style={{backgroundColor: '#4f46e5', fontWeight: '900', padding: '16px', borderRadius: '18px', boxShadow: '0 10px 15px -3px rgba(79, 70, 229, 0.3)'}}
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                fullWidth
+                                disabled={createMutation.isPending}
+                                style={{ backgroundColor: '#4f46e5', fontWeight: '900', padding: '16px', borderRadius: '18px', boxShadow: '0 10px 15px -3px rgba(79, 70, 229, 0.3)' }}
                             >
                                 {createMutation.isPending ? 'ACTIVATING...' : 'ACTIVATE PARTNER'}
                             </Button>
@@ -107,12 +107,12 @@ export default function Airlines() {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-400 text-[10px] font-bold uppercase">Total Carriers</span>
-                                <span className="text-2xl font-black">{airlines.length}</span>
+                                <span className="text-2xl font-black">{airlines?.length || 0}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-400 text-[10px] font-bold uppercase">Avg Rate / KG</span>
                                 <span className="text-2xl font-black text-primary">
-                                    ${airlines.length > 0 ? (airlines.reduce((acc, a) => acc + a.pricePerKg, 0) / airlines.length).toFixed(2) : '0.00'}
+                                    ${airlines?.length > 0 ? (airlines.reduce((acc, a) => acc + a.pricePerKg, 0) / airlines.length).toFixed(2) : '0.00'}
                                 </span>
                             </div>
                         </div>
@@ -132,7 +132,7 @@ export default function Airlines() {
                                 </TableRow>
                             </TableHead>
                             <TableBody className="divide-y divide-slate-50">
-                                {airlines.map((airline) => (
+                                {airlines?.map((airline) => (
                                     <TableRow key={airline._id} hover className="group transition-colors">
                                         <TableCell className="px-6 py-6">
                                             <div className="flex items-center gap-4">
@@ -151,7 +151,7 @@ export default function Airlines() {
                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg">Dynamic Weight-Based</span>
                                         </TableCell>
                                         <TableCell className="px-6 py-6" align="right">
-                                            <IconButton 
+                                            <IconButton
                                                 className="hover:bg-red-50 text-slate-300 hover:text-red-500 transition-all"
                                                 onClick={() => { if (window.confirm('Terminate partner access?')) deleteMutation.mutate(airline._id) }}
                                             >
@@ -160,7 +160,7 @@ export default function Airlines() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {airlines.length === 0 && (
+                                {airlines?.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={4} className="px-6 py-20 text-center">
                                             <div className="flex flex-col items-center opacity-20">

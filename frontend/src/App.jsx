@@ -22,6 +22,21 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
 
+// Component for external redirects (like from 5173 to 5174)
+const ExternalRedirect = ({ url }) => {
+  useEffect(() => {
+    window.location.href = url;
+  }, [url]);
+  return (
+    <div className="flex items-center justify-center h-screen bg-slate-50 font-outfit">
+        <div className="text-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">Accessing Command Center...</p>
+        </div>
+    </div>
+  );
+};
+
 // Component to handle Clerk token and pass it to axios
 const TokenManager = () => {
   const { getToken } = useAuth();

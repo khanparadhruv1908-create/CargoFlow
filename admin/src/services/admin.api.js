@@ -3,15 +3,19 @@ import api from './api';
 export const adminApi = {
     // Key Metrics (Derived or placeholder for now)
     getMetrics: async () => {
-        const shipments = await api.get('/shipments');
-        const users = await api.get('/auth');
-        const invoices = await api.get('/invoices');
+        let shipments = [];
+        let users = [];
+        let invoices = [];
+
+        try { shipments = await api.get('/shipments') || []; } catch (e) { console.error("Metrics: shipments failed", e); }
+        try { users = await api.get('/auth') || []; } catch (e) { console.error("Metrics: auth failed", e); }
+        try { invoices = await api.get('/invoices') || []; } catch (e) { console.error("Metrics: invoices failed", e); }
 
         return {
-            totalShipments: shipments.length,
-            activeDeliveries: shipments.filter(s => s.status === 'In Transit').length,
-            revenueSummary: invoices.reduce((acc, inv) => acc + inv.totalAmount, 0),
-            newUsers: users.length,
+            totalShipments: Array.isArray(shipments) ? shipments.length : 0,
+            activeDeliveries: Array.isArray(shipments) ? shipments.filter(s => s.status === 'In Transit').length : 0,
+            revenueSummary: Array.isArray(invoices) ? invoices.reduce((acc, inv) => acc + (inv.totalAmount || 0), 0) : 0,
+            newUsers: Array.isArray(users) ? users.length : 0,
         };
     },
 

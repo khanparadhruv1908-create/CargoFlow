@@ -2,29 +2,30 @@ import Invoice from '../models/Invoice.js';
 
 export const createInvoice = async (req, res, next) => {
     try {
-        const { invoiceId, shipmentId, amount, tax, totalAmount } = req.body;
+        const { invoiceId, bookingId, serviceType, amount, tax, totalAmount, customer } = req.body;
 
-        // In a real app we would compute Stripe/Razorpay integrations here
         const invoice = await Invoice.create({
             invoiceId,
-            shipment: shipmentId,
+            bookingId,
+            serviceType,
             amount,
             tax,
             totalAmount,
+            customer,
             status: 'Unpaid'
         });
 
         res.status(201).json(invoice);
     } catch (error) {
-        next(error);
+        res.status(500).json({ message: error.message });
     }
 };
 
 export const getInvoices = async (req, res, next) => {
     try {
-        const invoices = await Invoice.find().populate('shipment');
+        const invoices = await Invoice.find().sort({ createdAt: -1 });
         res.json(invoices);
     } catch (error) {
-        next(error);
+        res.status(500).json({ message: error.message });
     }
 };

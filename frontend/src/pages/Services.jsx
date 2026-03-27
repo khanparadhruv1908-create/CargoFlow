@@ -22,10 +22,16 @@ const Services = () => {
         const fetchServices = async () => {
             try {
                 const data = await api.get('/services');
-                setServices(data);
+                if (Array.isArray(data)) {
+                    setServices(data);
+                } else {
+                    console.error("Services: Data is not an array", data);
+                    setServices([]);
+                }
             } catch (err) {
                 console.error("Failed to fetch services", err);
                 setError(err.response?.data?.message || 'Failed to fetch services.');
+                setServices([]);
             } finally {
                 setIsLoading(false);
             }
@@ -58,45 +64,57 @@ const Services = () => {
                             <span className="text-lg font-medium text-gray-500">Loading active services...</span>
                         </div>
                     ) : error ? (
-                        <div className="flex justify-center items-center py-20">
+                        <div className="flex justify-center items-center py-20 text-center flex-col gap-4">
                             <span className="text-lg font-medium text-red-500">{error}</span>
+                            <button 
+                                onClick={() => window.location.reload()}
+                                className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors"
+                            >
+                                Retry
+                            </button>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                            {services.map((service) => {
-                                const Icon = iconMap[service.icon] || PackageIcon;
-                                return (
-                                    <div key={service.id} className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col group">
-                                        <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                                            <Icon className="h-8 w-8" />
+                            {Array.isArray(services) && services.length > 0 ? (
+                                services.map((service) => {
+                                    const Icon = iconMap[service.icon] || PackageIcon;
+                                    return (
+                                        <div key={service._id || service.id} className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col group">
+                                            <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                                                <Icon className="h-8 w-8" />
+                                            </div>
+                                            <h3 className="text-2xl font-bold text-slate-800 mb-4 font-outfit">{service.title}</h3>
+                                            <p className="text-slate-600 mb-8 leading-relaxed flex-grow">
+                                                {service.description}
+                                            </p>
+                                            <ul className="space-y-3 mb-8">
+                                                {Array.isArray(service.features) && service.features.map((feature, fIdx) => (
+                                                    <li key={fIdx} className="flex items-start gap-3">
+                                                        <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0" />
+                                                        <span className="text-sm text-slate-600">{feature}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            <Link
+                                                to={
+                                                    service.id === 'warehousing' ? '/warehouse' :
+                                                    service.id === 'air-freight' ? '/book?service=air-freight' :
+                                                    service.id === 'ocean-freight' ? '/book?service=ocean-freight' :
+                                                    service.id === 'customs-brokerage' ? '/book?service=customs-brokerage' :
+                                                    `/book?service=${service.id || service._id}`
+                                                }
+                                                className="mt-auto w-full text-center py-3 px-4 bg-primary text-white font-semibold rounded-xl hover:bg-primary-light transition-colors duration-300 shadow-md hover:shadow-lg"
+                                            >
+                                                Book Now
+                                            </Link>
                                         </div>
-                                        <h3 className="text-2xl font-bold text-slate-800 mb-4 font-outfit">{service.title}</h3>
-                                        <p className="text-slate-600 mb-8 leading-relaxed flex-grow">
-                                            {service.description}
-                                        </p>
-                                        <ul className="space-y-3 mb-8">
-                                            {service.features && service.features.map((feature, fIdx) => (
-                                                <li key={fIdx} className="flex items-start gap-3">
-                                                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0" />
-                                                    <span className="text-sm text-slate-600">{feature}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        <Link
-                                            to={
-                                                service.id === 'warehousing' ? '/warehouse' :
-                                                service.id === 'air-freight' ? '/book?service=air-freight' :
-                                                service.id === 'ocean-freight' ? '/book?service=ocean-freight' :
-                                                service.id === 'customs-brokerage' ? '/book?service=customs-brokerage' :
-                                                `/book?service=${service.id}`
-                                            }
-                                            className="mt-auto w-full text-center py-3 px-4 bg-primary text-white font-semibold rounded-xl hover:bg-primary-light transition-colors duration-300 shadow-md hover:shadow-lg"
-                                        >
-                                            Book Now
-                                        </Link>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })
+                            ) : (
+                                <div className="col-span-full text-center py-10 text-slate-500">
+                                    No services available at the moment.
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

@@ -2,27 +2,15 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL,
+    baseURL: 'http://localhost:5000/api', // Hardcode for now to be 100% sure
 });
 
-let getTokenFunction = null;
-
-export const setTokenGetter = (fn) => {
-    getTokenFunction = fn;
-};
-
-// Request interceptor to attach JWT token
+// Request interceptor to attach local JWT token
 api.interceptors.request.use(
-    async (config) => {
-        if (getTokenFunction) {
-            try {
-                const token = await getTokenFunction();
-                if (token) {
-                    config.headers.Authorization = `Bearer ${token}`;
-                }
-            } catch (error) {
-                console.error("Error getting Clerk token in Admin", error);
-            }
+    (config) => {
+        const token = localStorage.getItem('admin_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
@@ -35,13 +23,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response.data,
     (error) => {
-        const message = error.response?.data?.message || 'An unexpected error occurred';
-        toast.error(message);
-
-        if (error.response?.status === 401) {
-            if (!window.location.pathname.includes('/login')) {
-                window.location.href = '/login';
-            }
+        const message = error.response?.data?.message || 'Network Error - Is the backend running?';
+        
+        if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
+            toast.error("Session expired. Please login again.");
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            window.location.href = '/login';
+        } else if (error.response?.status !== 401) {
+            toast.error(message);
         }
 
         return Promise.reject(error);

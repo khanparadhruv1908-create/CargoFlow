@@ -4,11 +4,12 @@
     "private": true,
     "scripts": {
         "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../admin && npm install",
-        "dev:backend": "cd backend && npm run dev",
-        "dev:frontend": "cd frontend && npm run dev",
-        "dev:admin": "cd admin && npm run dev",
+        "dev:backend": "npm run dev --prefix backend",
+        "dev:frontend": "npm run dev --prefix frontend",
+        "dev:admin": "npm run dev --prefix admin",
         "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:admin\"",
-        "start": "concurrently \"cd backend && npm start\" \"cd frontend && npm run build && npm run preview\" \"cd admin && npm run build && npm run preview\""
+        "seed:admin": "node backend/seedAdmin.js",
+        "start": "concurrently \"npm run start --prefix backend\" \"npm run build --prefix frontend && npm run preview --prefix frontend\" \"npm run build --prefix admin && npm run preview --prefix admin\""
     },
     "devDependencies": {
         "concurrently": "^8.2.2"

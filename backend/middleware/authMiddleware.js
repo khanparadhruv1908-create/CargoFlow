@@ -1,60 +1,66 @@
-import { createClerkClient } from '@clerk/backend';
-import { CLERK_SECRET_KEY } from '../config/env.js';
+import { createClerkClient, verifyToken } from '@clerk/backend';
+import { CLERK_SECRET_KEY, JWT_SECRET } from '../config/env.js';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
 const clerkClient = createClerkClient({ secretKey: CLERK_SECRET_KEY });
 
+// Unified protect that handles both Clerk (frontend) and Local JWT (admin)
 export const protect = async (req, res, next) => {
-    // DEVELOPMENT MOCK AUTH: If key is the placeholder, use a dummy user
-    if (CLERK_SECRET_KEY === 'sk_test_1X8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q') {
-        console.warn('WARNING: Using Mock Auth because CLERK_SECRET_KEY is a placeholder.');
-        req.user = {
-            id: 'user_mock_123',
-            clerkId: 'user_mock_123',
-            role: 'admin'
-        };
-        return next();
-    }
-
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+        
+        // 1. TRY LOCAL JWT FIRST (Fastest for Admin)
         try {
-            token = req.headers.authorization.split(' ')[1];
-            
-            // Verify the token with Clerk
-            const decoded = await clerkClient.verifyToken(token);
-            
-            if (!decoded) {
-                console.error('Clerk Auth: No decoded token returned');
-                res.status(401);
-                return next(new Error('Not authorized, token failed'));
+            const decoded = jwt.verify(token, JWT_SECRET);
+            const user = await User.findById(decoded.id).select('-password');
+            if (user) {
+                req.user = user;
+                return next(); // SUCCESS
             }
-
-            req.user = {
-                id: decoded.sub,
-                clerkId: decoded.sub,
-                role: decoded.metadata?.role || 'user'
-            };
-
-            return next();
-        } catch (error) {
-            console.error('Clerk Auth Error Details:', error.message);
-            res.status(401);
-            return next(new Error('Not authorized, token failed'));
+        } catch (jwtErr) {
+            // Not a valid local JWT, continue to Clerk
         }
+
+        // 2. TRY CLERK
+        if (!CLERK_SECRET_KEY) {
+            console.warn('CRITICAL: CLERK_SECRET_KEY is missing in backend env. Clerk verification skipped.');
+        } else {
+            try {
+                // In @clerk/backend v3, verifyToken is an independent function
+                const decodedClerk = await verifyToken(token, {
+                    secretKey: CLERK_SECRET_KEY
+                });
+                
+                if (decodedClerk) {
+                    req.user = {
+                        id: decodedClerk.sub,
+                        clerkId: decodedClerk.sub,
+                        role: (decodedClerk.metadata ? decodedClerk.metadata.role : 'user') || 'user'
+                    };
+                    return next(); // SUCCESS
+                }
+            } catch (clerkErr) {
+                console.error('Clerk Verification Error:', clerkErr.message);
+            }
+        }
+
+        // 3. IF BOTH FAIL
+        return res.status(401).json({ message: 'Not authorized, token failed' });
     }
 
     if (!token) {
-        res.status(401);
-        return next(new Error('Not authorized, no token'));
+        return res.status(401).json({ message: 'Not authorized, no token' });
     }
 };
 
 export const authorize = (...roles) => {
     return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
+        if (!req.user || !roles.includes(req.user.role)) {
             res.status(403);
-            return next(new Error(`Role ${req.user.role} is not authorized to access this route`));
+            return next(new Error(`Role ${req.user?.role || 'none'} is not authorized to access this route`));
         }
         next();
     };

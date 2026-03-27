@@ -25,10 +25,12 @@ const FlightBooking = () => {
 
     const { data: airlines = [], isLoading: isLoadingAirlines } = useQuery({
         queryKey: ['airlines'],
-        queryFn: async () => {
-            const data = await api.get('/airlines');
-            return data;
-        }
+        queryFn: async () => await api.get('/airlines')
+    });
+
+    const { data: hubs = [], isLoading: isLoadingHubs } = useQuery({
+        queryKey: ['hubs'],
+        queryFn: async () => await api.get('/customs/ports') // Matches the route in server.js
     });
 
     const { register, handleSubmit, formState: { errors }, watch } = useForm({
@@ -108,18 +110,24 @@ const FlightBooking = () => {
                         <form onSubmit={handleSubmit(onValidateForm)} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Origin Airport</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Origin Hub</label>
                                     <div className="relative">
                                         <MapPin className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
-                                        <input {...register('origin')} className="pl-10 w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="e.g. JFK, New York" />
+                                        <select {...register('origin')} className="pl-10 w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                            <option value="">-- Select Origin --</option>
+                                            {hubs.map(h => <option key={h._id} value={h.name}>{h.name}</option>)}
+                                        </select>
                                     </div>
                                     {errors.origin && <p className="text-red-500 text-xs mt-1">{errors.origin.message}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Destination Airport</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Destination Hub</label>
                                     <div className="relative">
                                         <MapPin className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
-                                        <input {...register('destination')} className="pl-10 w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="e.g. LHR, London" />
+                                        <select {...register('destination')} className="pl-10 w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                            <option value="">-- Select Destination --</option>
+                                            {hubs.map(h => <option key={h._id} value={h.name}>{h.name}</option>)}
+                                        </select>
                                     </div>
                                     {errors.destination && <p className="text-red-500 text-xs mt-1">{errors.destination.message}</p>}
                                 </div>

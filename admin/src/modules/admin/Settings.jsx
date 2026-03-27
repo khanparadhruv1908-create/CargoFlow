@@ -36,7 +36,7 @@ export default function Settings() {
         isActive: true
     });
 
-    const { data: services = [], isLoading } = useQuery({
+    const { data: services = [] } = useQuery({
         queryKey: ['admin-services'],
         queryFn: async () => await api.get('/services/admin')
     });
@@ -126,7 +126,7 @@ export default function Settings() {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {services.map((service) => (
+                                {services?.map((service) => (
                                     <TableRow key={service._id} hover>
                                         <TableCell>
                                             <div className="flex items-center gap-3">

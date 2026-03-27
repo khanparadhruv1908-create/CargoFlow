@@ -46,7 +46,8 @@ export const createAirBooking = async (req, res, next) => {
 
         res.status(201).json(createdBooking);
     } catch (error) {
-        next(error);
+        console.error("Air Booking Error:", error.message);
+        res.status(500).json({ message: error.message });
     }
 };
 

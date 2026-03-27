@@ -19,9 +19,15 @@ const Home = () => {
         const fetchServices = async () => {
             try {
                 const data = await api.get('/services');
-                setServices(data.slice(0, 4)); // Show first 4 on home
+                if (Array.isArray(data)) {
+                    setServices(data.slice(0, 4)); // Show first 4 on home
+                } else {
+                    console.error("Home: Services data is not an array", data);
+                    setServices([]);
+                }
             } catch (err) {
                 console.error("Home: Failed to fetch services", err);
+                setServices([]);
             }
         };
         fetchServices();

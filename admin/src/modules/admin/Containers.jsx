@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton } from '@mui/material';
-import { Ship, Anchor, Plus, Trash2, Navigation, Clock, Package, DollarSign, MapPin } from 'lucide-react';
+import { Ship, Anchor, Trash2, Navigation, Clock, Package, DollarSign, MapPin } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -18,12 +18,12 @@ export default function ContainerManagement() {
     const [dest, setDest] = useState('');
     const [transit, setTransit] = useState('');
 
-    const { data: containers = [], isLoading: loadC } = useQuery({
+    const { data: containers = [] } = useQuery({
         queryKey: ['ocean-containers'],
         queryFn: async () => await api.get('/ocean/containers')
     });
 
-    const { data: schedules = [], isLoading: loadS } = useQuery({
+    const { data: schedules = [] } = useQuery({
         queryKey: ['ocean-schedules'],
         queryFn: async () => await api.get('/ocean/schedules')
     });
@@ -89,7 +89,7 @@ export default function ContainerManagement() {
                         <div className="absolute top-0 right-0 p-4 opacity-10"><Anchor size={80} /></div>
                         <h4 className="text-[10px] font-black uppercase tracking-widest mb-6 text-teal-400">Available Asset Fleet</h4>
                         <div className="space-y-4">
-                            {containers.map(c => (
+                            {containers?.map(c => (
                                 <div key={c._id} className="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/10 group">
                                     <div>
                                         <div className="font-bold text-xs">{c.name}</div>
@@ -144,7 +144,7 @@ export default function ContainerManagement() {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody className="divide-y divide-slate-50">
-                                    {schedules.map(s => (
+                                    {schedules?.map(s => (
                                         <TableRow key={s._id} hover className="group transition-colors">
                                             <TableCell className="px-4 py-4">
                                                 <div className="font-black text-slate-800 text-xs flex items-center gap-2">
@@ -168,7 +168,7 @@ export default function ContainerManagement() {
                                             </TableCell>
                                         </TableRow>
                                     ))}
-                                    {schedules.length === 0 && (
+                                    {schedules?.length === 0 && (
                                         <TableRow><TableCell colSpan={4} className="text-center py-10 text-slate-400 text-xs font-bold uppercase">No vessel schedules deployed</TableCell></TableRow>
                                     )}
                                 </TableBody>

@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { PackageOpen, Activity, UserPlus, DollarSign, Plane, Ship, Warehouse, FileText, Zap } from 'lucide-react';
 import { useAdminMetrics, useAdminTrends } from '../../hooks/useAdminData';
 import { useQuery } from '@tanstack/react-query';
@@ -38,18 +38,33 @@ const ServiceStat = ({ label, count, icon: Icon, color }) => (
 );
 
 export default function DashboardOverview() {
-    const { data: metrics, isLoading: isMetricsLoading } = useAdminMetrics();
-    const { data: trends, isLoading: isTrendsLoading } = useAdminTrends();
+    const { data: metrics, isLoading: isMetricsLoading, isError: isMetricsError } = useAdminMetrics();
+    const { data: trends, isLoading: isTrendsLoading, isError: isTrendsError } = useAdminTrends();
 
     // Fetch live service counts
-    const { data: airCount = 0 } = useQuery({ queryKey: ['air-count'], queryFn: async () => (await api.get('/air-bookings')).length });
-    const { data: oceanCount = 0 } = useQuery({ queryKey: ['ocean-count'], queryFn: async () => (await api.get('/ocean/bookings')).length });
-    const { data: whCount = 0 } = useQuery({ queryKey: ['wh-count'], queryFn: async () => (await api.get('/warehouse/bookings')).length });
-    const { data: customsCount = 0 } = useQuery({ queryKey: ['customs-count'], queryFn: async () => (await api.get('/customs/declarations')).length });
+    const { data: airCount = 0 } = useQuery({ queryKey: ['air-count'], queryFn: async () => (await api.get('/air-bookings'))?.length || 0 });
+    const { data: oceanCount = 0 } = useQuery({ queryKey: ['ocean-count'], queryFn: async () => (await api.get('/ocean/bookings'))?.length || 0 });
+    const { data: whCount = 0 } = useQuery({ queryKey: ['wh-count'], queryFn: async () => (await api.get('/warehouse/bookings'))?.length || 0 });
+    const { data: customsCount = 0 } = useQuery({ queryKey: ['customs-count'], queryFn: async () => (await api.get('/customs/declarations'))?.length || 0 });
 
     if (isMetricsLoading || isTrendsLoading) return (
         <div className="h-screen flex items-center justify-center">
             <Activity className="animate-spin text-primary" size={48} />
+        </div>
+    );
+
+    if (isMetricsError || isTrendsError) return (
+        <div className="h-screen flex flex-col items-center justify-center space-y-4">
+            <div className="p-4 bg-red-100 text-red-700 rounded-xl font-bold border border-red-200">
+                Failed to load dashboard intelligence.
+            </div>
+            <p className="text-slate-500">Please check your connection to the CargoFlow network.</p>
+            <button 
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold"
+            >
+                Retry Connection
+            </button>
         </div>
     );
 
@@ -78,21 +93,21 @@ export default function DashboardOverview() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <StatCard
                     title="Total Shipments"
-                    value={metrics?.totalShipments.toLocaleString()}
+                    value={metrics?.totalShipments?.toLocaleString() || '0'}
                     icon={PackageOpen}
                     colorClass="bg-blue-600"
                     trend={12}
                 />
                 <StatCard
                     title="Net Revenue"
-                    value={`$${metrics?.revenueSummary.toLocaleString()}`}
+                    value={`$${metrics?.revenueSummary?.toLocaleString() || '0'}`}
                     icon={DollarSign}
                     colorClass="bg-indigo-600"
                     trend={8}
                 />
                 <StatCard
                     title="Network Users"
-                    value={metrics?.newUsers}
+                    value={metrics?.newUsers || 0}
                     icon={UserPlus}
                     colorClass="bg-slate-900"
                 />

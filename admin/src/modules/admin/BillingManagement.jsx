@@ -48,12 +48,12 @@ export default function BillingManagement() {
                             <TableRow key={inv.invoiceId} className="hover:bg-gray-50 transition-colors">
                                 <TableCell className="font-mono font-medium text-sm">{inv.invoiceId}</TableCell>
                                 <TableCell className="font-mono text-xs text-blue-600 hover:underline cursor-pointer">
-                                    {inv.shipmentId}
+                                    {inv.bookingId}
                                 </TableCell>
                                 <TableCell className="text-gray-500">{inv.date}</TableCell>
                                 <TableCell>${inv.amount.toLocaleString()}</TableCell>
                                 <TableCell>${inv.tax.toLocaleString()}</TableCell>
-                                <TableCell className="font-bold text-gray-900">${inv.total.toLocaleString()}</TableCell>
+                                <TableCell className="font-bold text-gray-900">${inv.totalAmount.toLocaleString()}</TableCell>
                                 <TableCell>
                                     <Chip
                                         label={inv.status}

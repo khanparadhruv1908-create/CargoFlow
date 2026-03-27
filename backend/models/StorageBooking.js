@@ -24,11 +24,10 @@ const storageBookingSchema = new mongoose.Schema({
     customer: { type: String } // Clerk ID
 }, { timestamps: true });
 
-storageBookingSchema.pre('save', function (next) {
+storageBookingSchema.pre('save', async function () {
     if (!this.bookingNumber) {
         this.bookingNumber = 'WH-' + Math.floor(10000000 + Math.random() * 90000000);
     }
-    next();
 });
 
 const StorageBooking = mongoose.model('StorageBooking', storageBookingSchema);

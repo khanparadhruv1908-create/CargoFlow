@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton, Collapse, Box } from '@mui/material';
-import { Warehouse, Plus, Trash2, Box as BoxIcon, Calendar, User as UserIcon, LayoutGrid, DollarSign, MapPin, ChevronDown, ChevronUp, Scale, Timer, Zap } from 'lucide-react';
+import { Warehouse, Trash2, DollarSign, MapPin, ChevronDown, ChevronUp, Zap } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -102,7 +102,7 @@ export default function WarehouseManagement() {
         features: '24/7 Security, Climate Control'
     });
 
-    const { data: locations = [], isLoading: loadingLocs } = useQuery({
+    const { data: locations = [] } = useQuery({
         queryKey: ['warehouse-locations'],
         queryFn: async () => { 
             const data = await api.get('/warehouse/locations'); 
@@ -110,7 +110,7 @@ export default function WarehouseManagement() {
         }
     });
 
-    const { data: bookings = [], isLoading: loadingBookings } = useQuery({
+    const { data: bookings = [] } = useQuery({
         queryKey: ['warehouse-bookings'],
         queryFn: async () => { 
             const data = await api.get('/warehouse/bookings'); 
@@ -190,7 +190,7 @@ export default function WarehouseManagement() {
                         </div>
                         <Table size="small">
                             <TableBody>
-                                {locations.map(loc => (
+                                {locations?.map(loc => (
                                     <TableRow key={loc._id} hover className="group">
                                         <TableCell><div className="font-bold text-xs">{loc.name}</div></TableCell>
                                         <TableCell align="right"><IconButton size="small" color="error" onClick={() => delLocation.mutate(loc._id)}><Trash2 size={14}/></IconButton></TableCell>
@@ -216,7 +216,7 @@ export default function WarehouseManagement() {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody className="divide-y divide-slate-50">
-                                    {bookings.map(book => (
+                                    {bookings?.map(book => (
                                         <BookingRow key={book._id} book={book} statusMutation={statusMutation} />
                                     ))}
                                 </TableBody>

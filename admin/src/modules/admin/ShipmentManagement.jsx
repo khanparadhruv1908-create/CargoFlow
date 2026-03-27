@@ -66,7 +66,7 @@ export default function ShipmentManagement() {
                         </TableRow>
                     </TableHead>
                     <TableBody className="divide-y divide-slate-50">
-                        {shipments.map((ship) => (
+                        {shipments?.map((ship) => (
                             <TableRow key={ship._id} hover className="group transition-colors">
                                 <TableCell className="px-6 py-6">
                                     <div className="font-mono font-black text-primary bg-primary/5 px-2 py-1 rounded inline-block text-xs uppercase">
@@ -118,7 +118,7 @@ export default function ShipmentManagement() {
                                 </TableCell>
                             </TableRow>
                         ))}
-                        {shipments.length === 0 && (
+                        {shipments?.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={5} className="px-6 py-20 text-center">
                                     <div className="flex flex-col items-center opacity-20">

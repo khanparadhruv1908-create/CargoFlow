@@ -12,11 +12,10 @@ const invoiceSchema = new mongoose.Schema({
     paymentIntentId: { type: String }
 }, { timestamps: true });
 
-invoiceSchema.pre('validate', function(next) {
+invoiceSchema.pre('validate', async function() {
     if (!this.invoiceId) {
         this.invoiceId = 'INV-' + Math.floor(10000000 + Math.random() * 90000000);
     }
-    next();
 });
 
 const Invoice = mongoose.model('Invoice', invoiceSchema);

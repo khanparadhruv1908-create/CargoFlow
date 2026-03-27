@@ -23,6 +23,8 @@ const Navbar = () => {
         // You might want to handle admin roles via Clerk metadata later
         // For now, let's keep it simple or check a specific email/metadata if needed
         const isAdmin = user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'manager';
+        // For development/debugging: show admin link to all logged in users if needed, 
+        // or just keep it as is but ensure it's easy to find.
         if (isAdmin) {
             links.push({ name: 'Admin', path: 'http://localhost:5174/', external: true });
         }

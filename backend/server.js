@@ -8,6 +8,20 @@ import { PORT } from './config/env.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 import { logger } from './utils/logger.js';
 
+// Pre-register all models to avoid registration errors
+import './models/User.js';
+import './models/Airline.js';
+import './models/CustomsPort.js';
+import './models/WarehouseLocation.js';
+import './models/Warehouse.js';
+import './models/Ocean.js';
+import './models/Service.js';
+import './models/Shipment.js';
+import './models/Invoice.js';
+import './models/Tracking.js';
+import './models/StorageBooking.js';
+import './models/CustomsDeclaration.js';
+
 // Routes
 import authRoutes from './routes/authRoutes.js';
 import shipmentRoutes from './routes/shipmentRoutes.js';

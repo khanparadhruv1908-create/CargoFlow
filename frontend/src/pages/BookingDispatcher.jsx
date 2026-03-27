@@ -90,12 +90,25 @@ const CheckoutForm = ({ amount, onPaymentSuccess, onCancel }) => {
         }
     };
 
+    const handleSimulate = (e) => {
+        e.preventDefault();
+        setIsProcessing(true);
+        setTimeout(() => {
+            onPaymentSuccess('simulated_' + Math.random().toString(36).substr(2, 9));
+            setIsProcessing(false);
+        }, 1500);
+    };
+
     return (
         <div className="space-y-8 animate-in zoom-in duration-500">
-            <div className="bg-slate-900 p-8 rounded-[2rem] text-white">
+            <div className="bg-slate-900 p-8 rounded-[2rem] text-white overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-2xl"></div>
                 <div className="flex justify-between items-center mb-6">
                     <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Secure Checkout</span>
-                    <Lock size={16} className="text-primary" />
+                    <div className="flex items-center gap-2">
+                        <span className="text-[8px] font-black bg-primary/20 text-primary px-2 py-1 rounded">SIMULATOR ACTIVE</span>
+                        <Lock size={16} className="text-primary" />
+                    </div>
                 </div>
                 <div className="text-4xl font-black font-mono mb-2">${amount.toFixed(2)}</div>
                 <p className="text-slate-400 text-[10px] font-bold uppercase">Total Charges to be Authorized</p>
@@ -119,12 +132,27 @@ const CheckoutForm = ({ amount, onPaymentSuccess, onCancel }) => {
                     <button 
                         type="submit" 
                         disabled={!stripe || isProcessing}
-                        className="w-full bg-primary text-white font-black py-5 rounded-2xl shadow-xl hover:bg-primary-light transition-all flex items-center justify-center gap-3"
+                        className="w-full bg-slate-200 text-slate-500 font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-3 opacity-50 cursor-not-allowed"
+                    >
+                        <CreditCard size={18} /> PAY VIA STRIPE (OFFLINE)
+                    </button>
+
+                    <div className="relative py-2 flex items-center justify-center">
+                        <div className="absolute w-full h-px bg-slate-100"></div>
+                        <span className="relative bg-white px-4 text-[10px] font-black text-slate-300 uppercase tracking-widest">OR</span>
+                    </div>
+
+                    <button 
+                        type="button"
+                        onClick={handleSimulate}
+                        disabled={isProcessing}
+                        className="w-full bg-primary text-white font-black py-5 rounded-2xl shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
                     >
                         {isProcessing ? <RefreshCw className="animate-spin" /> : <ShieldCheck />}
-                        {isProcessing ? 'AUTHORIZING...' : 'PAY & CONFIRM BOOKING'}
+                        {isProcessing ? 'AUTHORIZING...' : 'SIMULATE PAYMENT (PROCEED)'}
                     </button>
-                    <button type="button" onClick={onCancel} className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Back to Review</button>
+                    
+                    <button type="button" onClick={onCancel} className="text-slate-400 font-bold uppercase text-[10px] tracking-widest pt-2">Back to Review</button>
                 </div>
             </form>
         </div>

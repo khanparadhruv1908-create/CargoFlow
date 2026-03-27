@@ -44,7 +44,7 @@ export default function OceanBookings() {
                         </TableRow>
                     </TableHead>
                     <TableBody className="divide-y divide-slate-50">
-                        {bookings.map((booking) => (
+                        {bookings?.map((booking) => (
                             <TableRow key={booking._id} hover className="group transition-colors">
                                 <TableCell className="px-6 py-6">
                                     <div className="font-mono font-black text-teal-600 bg-teal-50 px-2 py-1 rounded inline-block text-xs uppercase tracking-wider">
@@ -103,7 +103,7 @@ export default function OceanBookings() {
                                 </TableCell>
                             </TableRow>
                         ))}
-                        {bookings.length === 0 && (
+                        {bookings?.length === 0 && (
                             <TableRow><TableCell colSpan={5} className="px-6 py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">No active ocean fleet bookings</TableCell></TableRow>
                         )}
                     </TableBody>

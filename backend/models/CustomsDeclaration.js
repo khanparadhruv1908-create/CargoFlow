@@ -20,12 +20,11 @@ const customsDeclarationSchema = new mongoose.Schema({
     customer: { type: String } // Clerk ID
 }, { timestamps: true });
 
-customsDeclarationSchema.pre('save', function (next) {
+customsDeclarationSchema.pre('save', async function () {
     if (!this.declarationNumber) {
         // Fallback
         this.declarationNumber = 'DEC-' + Math.floor(10000000 + Math.random() * 90000000);
     }
-    next();
 });
 
 const CustomsDeclaration = mongoose.model('CustomsDeclaration', customsDeclarationSchema);

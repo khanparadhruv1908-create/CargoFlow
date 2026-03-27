@@ -27,15 +27,14 @@ const oceanBookingSchema = new mongoose.Schema({
     totalCharges: { type: Number, required: true },
     bolOption: { type: String, enum: ['Sea Way Bill', 'Original Bill of Lading', 'Pending'], default: 'Pending' },
     containerStatus: { type: String, enum: ['Pending', 'Loaded', 'Discharged', 'Delivered'], default: 'Pending' },
-    vesselStatus: { type: String, enum: ['Scheduled', 'Departed', 'In Transit', 'Arrived'], default: 'Scheduled' },
+    vesselStatus: { type: String, enum: ['Scheduled', 'Departed', 'In Transit', 'Arrived', 'Delayed', 'Cancelled'], default: 'Scheduled' },
     customer: { type: String } // Clerk User ID
 }, { timestamps: true });
 
-oceanBookingSchema.pre('save', function (next) {
+oceanBookingSchema.pre('save', async function () {
     if (!this.bolNumber) {
         this.bolNumber = 'BOL-' + Math.floor(10000000 + Math.random() * 90000000);
     }
-    next();
 });
 
 export const OceanBooking = mongoose.model('OceanBooking', oceanBookingSchema);

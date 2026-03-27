@@ -38,22 +38,33 @@ export const registerUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
     try {
         const { email, password } = req.body;
+        console.log(`Login attempt for: ${email}`);
 
         const user = await User.findOne({ email });
 
-        if (user && (await user.matchPassword(password))) {
-            res.json({
-                _id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                token: generateToken(user._id, user.role),
-            });
+        if (user) {
+            console.log(`User found: ${user.email}, Role: ${user.role}`);
+            const isMatch = await user.matchPassword(password);
+            console.log(`Password match result: ${isMatch}`);
+
+            if (isMatch) {
+                res.json({
+                    _id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    token: generateToken(user._id, user.role),
+                });
+                return;
+            }
         } else {
-            res.status(401);
-            throw new Error('Invalid email or password');
+            console.log(`User NOT found: ${email}`);
         }
+
+        res.status(401);
+        throw new Error('Invalid email or password');
     } catch (error) {
+        console.error(`Login error for ${req.body.email}:`, error.message);
         next(error);
     }
 };
