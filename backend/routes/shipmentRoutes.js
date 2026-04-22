@@ -1,27 +1,52 @@
 import express from 'express';
 import {
     createShipment,
-    getShipments,
-    getShipmentById,
+    getAllShipments,
+    updateTrackingStatus,
+    getTrackingInfo,
     updateShipment,
-    deleteShipment,
-    updateTracking
+    deleteShipment
 } from '../controllers/shipmentController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.route('/')
-    .post(protect, createShipment)
-    .get(protect, getShipments);
+// ---- SHIPMENT MANAGEMENT ROUTES ----
 
-router.route('/:id')
-    .get(protect, getShipmentById)
-    .put(protect, authorize('admin', 'manager', 'dispatcher'), updateShipment)
-    .delete(protect, authorize('admin'), deleteShipment);
+/**
+ * @route   POST /api/shipments/create-shipment
+ * @desc    Create a new shipment (Modern Sender/Receiver format)
+ */
+router.post('/create-shipment', protect, authorize('admin', 'manager', 'dispatcher'), createShipment);
 
-// NEW ENDPOINT FOR SMART TRACKING UPDATES (HISTORY Milestones)
-router.route('/:id/tracking')
-    .post(protect, authorize('admin', 'manager', 'dispatcher'), updateTracking);
+/**
+ * @route   GET /api/shipments
+ * @desc    Get all shipments (Admin sees all, user sees theirs)
+ */
+router.get('/', protect, getAllShipments);
+
+/**
+ * @route   POST /api/shipments/update-tracking/:id
+ * @desc    Add a new tracking milestone to a shipment
+ */
+router.post('/update-tracking/:id', protect, authorize('admin', 'manager', 'dispatcher'), updateTrackingStatus);
+
+/**
+ * @route   GET /api/shipments/track/:shipmentId
+ * @desc    Public tracking endpoint for modern UI
+ */
+router.get('/track/:shipmentId', getTrackingInfo);
+
+/**
+ * @route   PUT /api/shipments/:id
+ * @desc    Update master shipment details
+ */
+router.put('/:id', protect, authorize('admin', 'manager'), updateShipment);
+
+/**
+ * @route   DELETE /api/shipments/:id
+ * @desc    Delete shipment and its history
+ */
+router.delete('/:id', protect, authorize('admin'), deleteShipment);
 
 export default router;

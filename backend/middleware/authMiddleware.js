@@ -3,64 +3,73 @@ import { CLERK_SECRET_KEY, JWT_SECRET } from '../config/env.js';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-const clerkClient = createClerkClient({ secretKey: CLERK_SECRET_KEY });
-
-// Unified protect that handles both Clerk (frontend) and Local JWT (admin)
+/**
+ * Unified protection middleware that supports:
+ * 1. Admin/Local users via custom JWT
+ * 2. Customer users via Clerk
+ */
 export const protect = async (req, res, next) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
         
-        // 1. TRY LOCAL JWT FIRST (Fastest for Admin)
+        // 1. TRY LOCAL JWT FIRST (Used by Admin Panel)
         try {
             const decoded = jwt.verify(token, JWT_SECRET);
             const user = await User.findById(decoded.id).select('-password');
             if (user) {
+                // IMPORTANT: Standardize req.user format
                 req.user = user;
-                return next(); // SUCCESS
+                req.user._id = user._id; // Ensure Mongoose ID is available
+                return next(); 
             }
         } catch (jwtErr) {
-            // Not a valid local JWT, continue to Clerk
+            // Not a local token, continue to check Clerk
         }
 
-        // 2. TRY CLERK
-        if (!CLERK_SECRET_KEY) {
-            console.warn('CRITICAL: CLERK_SECRET_KEY is missing in backend env. Clerk verification skipped.');
-        } else {
+        // 2. TRY CLERK (Used by Frontend)
+        if (CLERK_SECRET_KEY) {
             try {
-                // In @clerk/backend v3, verifyToken is an independent function
                 const decodedClerk = await verifyToken(token, {
                     secretKey: CLERK_SECRET_KEY
                 });
                 
                 if (decodedClerk) {
-                    req.user = {
+                    // Clerk users might not be in our MongoDB 'User' collection yet.
+                    // We either find them or create a mock object for compatibility.
+                    // To keep it clean, we'll try to find by clerkId or standardize the object.
+                    
+                    const dbUser = await User.findOne({ clerkId: decodedClerk.sub });
+
+                    req.user = dbUser || {
+                        _id: decodedClerk.sub, // Use sub as ID if not in DB
                         id: decodedClerk.sub,
-                        clerkId: decodedClerk.sub,
-                        role: (decodedClerk.metadata ? decodedClerk.metadata.role : 'user') || 'user'
+                        name: decodedClerk.name || 'Clerk User',
+                        email: decodedClerk.email,
+                        role: (decodedClerk.metadata ? decodedClerk.metadata.role : 'user') || 'user',
+                        isClerkUser: true
                     };
-                    return next(); // SUCCESS
+                    return next();
                 }
             } catch (clerkErr) {
-                console.error('Clerk Verification Error:', clerkErr.message);
+                console.error('Clerk Auth Error:', clerkErr.message);
             }
         }
 
-        // 3. IF BOTH FAIL
-        return res.status(401).json({ message: 'Not authorized, token failed' });
+        return res.status(401).json({ success: false, message: 'Authorization failed' });
     }
 
-    if (!token) {
-        return res.status(401).json({ message: 'Not authorized, no token' });
-    }
+    return res.status(401).json({ success: false, message: 'No token provided' });
 };
 
 export const authorize = (...roles) => {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {
-            res.status(403);
-            return next(new Error(`Role ${req.user?.role || 'none'} is not authorized to access this route`));
+            return res.status(403).json({ 
+                success: false, 
+                message: `Forbidden: Access denied for role ${req.user?.role || 'anonymous'}` 
+            });
         }
         next();
     };

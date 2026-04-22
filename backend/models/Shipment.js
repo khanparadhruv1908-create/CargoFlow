@@ -1,45 +1,87 @@
 import mongoose from 'mongoose';
 
+/**
+ * Modern Shipment Schema with Stakeholders
+ * Includes Shipper (Sender), Consignee (Receiver), and Handled By (Internal Admin)
+ */
 const shipmentSchema = new mongoose.Schema({
     shipmentId: { 
         type: String, 
         required: true, 
         unique: true,
-        default: () => 'SHIP-' + Math.random().toString(36).substr(2, 9).toUpperCase()
+        default: () => 'CF-' + Math.random().toString(36).substr(2, 9).toUpperCase()
     },
-    // MODERN NAMING (REPLACING SHIPPER/CONSIGNEE)
-    sender: {
-        name: { type: String, required: true },
-        phone: { type: String },
-        address: { type: String, required: true }
+    
+    // Shipper Details (Sender - મોકલનાર)
+    shipper: {
+        name: { type: String, required: [true, 'Shipper name is required'] },
+        company: { type: String },
+        phone: { 
+            type: String, 
+            required: [true, 'Shipper phone is required'],
+            match: [/^\+?[1-9]\d{1,14}$/, 'Please provide a valid phone number']
+        },
+        email: { 
+            type: String, 
+            match: [/\S+@\S+\.\S+/, 'Please provide a valid email']
+        },
+        address: { type: String, required: [true, 'Shipper address is required'] }
     },
-    receiver: {
-        name: { type: String, required: true },
-        phone: { type: String },
-        address: { type: String, required: true }
+    
+    // Consignee Details (Receiver - મેળવનાર)
+    consignee: {
+        name: { type: String, required: [true, 'Consignee name is required'] },
+        company: { type: String },
+        phone: { 
+            type: String, 
+            required: [true, 'Consignee phone is required'],
+            match: [/^\+?[1-9]\d{1,14}$/, 'Please provide a valid phone number']
+        },
+        email: { 
+            type: String, 
+            match: [/\S+@\S+\.\S+/, 'Please provide a valid email']
+        },
+        address: { type: String, required: [true, 'Consignee address is required'] }
     },
+
+    // Internal Stakeholder
+    handledBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    
     origin: { type: String, required: true },
     destination: { type: String, required: true },
     cargoType: { type: String, required: true },
-    weight: { type: Number, required: true },
+    weight: { type: Number, required: true }, 
     
-    // AMAZON STYLE STATUS SYSTEM
     status: {
         type: String,
-        enum: ['Booking Confirmed', 'Picked Up', 'In Transit', 'Arrived', 'Out for Delivery', 'Delivered', 'Delayed', 'Cancelled'],
+        enum: [
+            'Booking Confirmed', 
+            'Assigned to Handler',
+            'Picked Up', 
+            'In Transit', 
+            'Arrived', 
+            'Out for Delivery', 
+            'Delivered', 
+            'Delayed', 
+            'Cancelled'
+        ],
         default: 'Booking Confirmed'
     },
     
-    assignedDriver: { type: String, default: 'Unassigned' },
-    eta: { type: Date, required: true },
-    customer: { type: String }, // Clerk ID
-    warehouse: { type: mongoose.Schema.Types.ObjectId, ref: 'Warehouse' }
+    eta: { type: Date },
+    customer: { type: String }, // User/Client ID who booked it
+    
 }, { timestamps: true });
 
-shipmentSchema.pre('save', async function () {
+// Pre-save hook to ensure shipmentId is always generated
+shipmentSchema.pre('save', function (next) {
     if (!this.shipmentId) {
-        this.shipmentId = 'SHIP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        this.shipmentId = 'CF-' + Math.random().toString(36).substr(2, 9).toUpperCase();
     }
+    next();
 });
 
 const Shipment = mongoose.model('Shipment', shipmentSchema);

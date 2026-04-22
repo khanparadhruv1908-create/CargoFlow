@@ -1,15 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material';
-import { Plane, MapPin, Clock, Trash2, Activity, User, Box } from 'lucide-react';
+import { Plane, ArrowRight, TrendingUp, Search } from 'lucide-react';
+import { useState } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 export default function FlightBookings() {
     const queryClient = useQueryClient();
+    const [searchTerm, setSearchTerm] = useState('');
 
     const { data: bookings = [], isLoading } = useQuery({
         queryKey: ['admin-flight-bookings'],
-        queryFn: async () => await api.get('/air-bookings')
+        queryFn: async () => (await api.get('/air-bookings')) || []
     });
 
     const statusMutation = useMutation({
@@ -20,89 +21,84 @@ export default function FlightBookings() {
         }
     });
 
-    if (isLoading) return <div className="flex justify-center py-20"><Activity className="animate-spin text-primary" /></div>;
+    const filtered = bookings.filter(b => 
+        b.awbNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.origin.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.destination.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (isLoading) return <div className="p-8 text-center animate-pulse text-gray-400 font-bold uppercase tracking-widest">Accessing Aviation Manifest...</div>;
 
     return (
-        <div className="space-y-8 pb-20">
-            <div>
-                <h2 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3 font-outfit uppercase">
-                    <Plane className="text-primary w-8 h-8" />
-                    Air Cargo Operations
-                </h2>
-                <p className="text-slate-500 font-medium">Manage specific air waybill bookings and flight logistics.</p>
+        <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="relative max-w-md">
+                <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                <input 
+                    type="text" 
+                    placeholder="Search AWB or Route..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                />
             </div>
 
-            <TableContainer component={Paper} elevation={0} className="rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-                <Table>
-                    <TableHead className="bg-slate-900">
-                        <TableRow>
-                            <th className="px-6 py-5 text-left text-[10px] font-black text-white uppercase tracking-widest">AWB Number</th>
-                            <th className="px-6 py-5 text-left text-[10px] font-black text-white uppercase tracking-widest">Route Path</th>
-                            <th className="px-6 py-5 text-left text-[10px] font-black text-white uppercase tracking-widest">Cargo Specs</th>
-                            <th className="px-6 py-5 text-left text-[10px] font-black text-white uppercase tracking-widest">Financials</th>
-                            <th className="px-6 py-5 text-right text-[10px] font-black text-white uppercase tracking-widest">Operational Status</th>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody className="divide-y divide-slate-50">
-                        {bookings?.map((book) => (
-                            <TableRow key={book._id} hover className="group transition-colors">
-                                <TableCell className="px-6 py-6">
-                                    <div className="font-mono font-black text-primary bg-primary/5 px-2 py-1 rounded inline-block text-xs uppercase">
-                                        {book.awbNumber}
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 font-bold mt-1 uppercase flex items-center gap-1">
-                                        <Plane size={10}/> {book.airline?.name}
-                                    </div>
-                                </TableCell>
-                                <TableCell className="px-6 py-6">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-black text-slate-800 text-sm">{book.origin}</span>
-                                        <span className="text-slate-300">→</span>
-                                        <span className="font-black text-slate-800 text-sm">{book.destination}</span>
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter flex items-center gap-1">
-                                        <Clock size={10}/> ETA: {new Date(book.eta).toLocaleDateString()}
-                                    </div>
-                                </TableCell>
-                                <TableCell className="px-6 py-6">
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase">
-                                            <Box size={12} className="text-slate-400"/> {book.cargoType}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">AWB Number</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Route Path</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cargo Specs</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Decision</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 text-sm">
+                            {filtered.map((b) => (
+                                <tr key={b._id} className="hover:bg-gray-50/50 transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="font-mono font-bold text-blue-600 uppercase">{b.awbNumber}</div>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">{b.airline?.name}</p>
+                                    </td>
+                                    <td className="px-6 py-4 font-bold text-gray-800">
+                                        <div className="flex items-center gap-2">
+                                            {b.origin} <ArrowRight size={12} className="text-gray-300" /> {b.destination}
                                         </div>
-                                        <div className="text-[10px] font-bold text-slate-400">
-                                            Mass: {book.weight}kg
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <p className="font-semibold text-gray-700">{b.cargoType}</p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase">{b.weight} KG</p>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="relative group w-fit">
+                                            <select 
+                                                className={`
+                                                    text-[10px] font-black rounded-lg border-none py-1.5 pl-3 pr-8 
+                                                    focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all uppercase tracking-wider
+                                                    ${
+                                                        b.status === 'Arrived' ? 'bg-emerald-50 text-emerald-600' :
+                                                        b.status === 'In Transit' ? 'bg-blue-50 text-blue-600' :
+                                                        'bg-gray-100 text-gray-500'
+                                                    }
+                                                `}
+                                                value={b.status}
+                                                onChange={(e) => statusMutation.mutate({ id: b._id, status: e.target.value })}
+                                            >
+                                                <option value="Scheduled">Scheduled</option>
+                                                <option value="Departed">Departed</option>
+                                                <option value="In Transit">Transit</option>
+                                                <option value="Arrived">Arrived</option>
+                                                <option value="Cancelled">Cancelled</option>
+                                            </select>
+                                            <TrendingUp size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" />
                                         </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="px-6 py-6">
-                                    <div className="text-sm font-black text-slate-900">${book.totalCharges?.toFixed(2)}</div>
-                                    <div className="text-[9px] font-bold text-emerald-600 uppercase tracking-tighter">Paid via Account</div>
-                                </TableCell>
-                                <TableCell className="px-6 py-6" align="right">
-                                    <select 
-                                        className={`text-[10px] font-black border-2 rounded-xl p-2 focus:ring-2 focus:ring-primary appearance-none text-center cursor-pointer transition-all ${
-                                            book.status === 'Arrived' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' :
-                                            book.status === 'In Transit' ? 'border-blue-100 bg-blue-50 text-blue-600' :
-                                            'border-slate-100 bg-slate-50 text-slate-600'
-                                        }`}
-                                        value={book.status}
-                                        onChange={(e) => statusMutation.mutate({ id: book._id, status: e.target.value })}
-                                    >
-                                        <option value="Scheduled">SCHEDULED</option>
-                                        <option value="Departed">DEPARTED</option>
-                                        <option value="In Transit">IN TRANSIT</option>
-                                        <option value="Arrived">ARRIVED</option>
-                                        <option value="Cancelled">CANCELLED</option>
-                                    </select>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                        {bookings?.length === 0 && (
-                            <TableRow><TableCell colSpan={5} className="px-6 py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">No active flight bookings</TableCell></TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 }

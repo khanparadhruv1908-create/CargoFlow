@@ -164,6 +164,11 @@ export default function ShipmentDetails({ shipment, onClose }) {
                 </div>
 
             </div>
+
+            {/* Document Management Section */}
+            <div className="mt-10 pt-10 border-t border-slate-100">
+                <DocumentManager shipmentId={shipment._id} />
+            </div>
         </div>
     );
 }

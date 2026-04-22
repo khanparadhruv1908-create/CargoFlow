@@ -9,7 +9,23 @@ const invoiceSchema = new mongoose.Schema({
     tax: { type: Number, required: true },
     totalAmount: { type: Number, required: true },
     status: { type: String, enum: ['Paid', 'Unpaid', 'Cancelled'], default: 'Unpaid' },
-    paymentIntentId: { type: String }
+    paymentIntentId: { type: String },
+    
+    // Stakeholder Details for the Manifest
+    shipper: {
+        name: String,
+        company: String,
+        address: String
+    },
+    consignee: {
+        name: String,
+        company: String,
+        address: String
+    },
+    handler: {
+        name: String,
+        role: String
+    }
 }, { timestamps: true });
 
 invoiceSchema.pre('validate', async function() {

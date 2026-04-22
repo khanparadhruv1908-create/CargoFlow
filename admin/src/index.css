@@ -1,15 +1,32 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 @theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --color-primary: #0a4d68;
-  --color-primary-light: #088395;
-  --color-secondary: #05bfdb;
-  --color-accent: #00ffca;
+  --font-sans: 'Inter', 'system-ui', 'sans-serif';
+  --font-outfit: 'Outfit', 'sans-serif';
+  
+  --color-primary: #2563EB;
+  --color-secondary: #0F172A;
+  --color-background: #F8FAFC;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
 }
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+    @apply bg-background text-secondary font-sans antialiased;
   }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full;
 }

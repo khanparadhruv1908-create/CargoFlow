@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import morgan from 'morgan';
+import path from 'path';
 import { Server } from 'socket.io';
 import { connectDB } from './config/db.js';
 import { PORT } from './config/env.js';
@@ -21,6 +22,8 @@ import './models/Invoice.js';
 import './models/Tracking.js';
 import './models/StorageBooking.js';
 import './models/CustomsDeclaration.js';
+import './models/Document.js';
+import './models/Notification.js';
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -34,6 +37,8 @@ import airlineRoutes from './routes/airlineRoutes.js';
 import airBookingRoutes from './routes/airBookingRoutes.js';
 import oceanRoutes from './routes/oceanRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 connectDB();
 
@@ -52,13 +57,24 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev', { stream: { write: message => logger.info(message.trim()) } }));
 
-// Socket.io for Real-time Tracking
+// Serve static files (Uploaded Documents)
+const __dirname = path.resolve();
+app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
+
+// Socket.io for Real-time Tracking and Notifications
 io.on('connection', (socket) => {
     logger.info(`Socket connected: ${socket.id}`);
 
+    // Join room for real-time tracking
     socket.on('join_shipment', (shipmentId) => {
         socket.join(shipmentId);
         logger.info(`Socket ${socket.id} joined shipment ${shipmentId}`);
+    });
+
+    // Join user room for private notifications
+    socket.on('join_user', (userId) => {
+        socket.join(userId);
+        logger.info(`Socket ${socket.id} joined user room ${userId}`);
     });
 
     socket.on('disconnect', () => {
@@ -78,6 +94,8 @@ app.use('/api/ocean', oceanRoutes);
 app.use('/api/customs', customsRoutes);
 app.use('/api/warehouse', warehouseRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error Handling
 app.use(notFound);

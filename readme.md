@@ -128,20 +128,41 @@ npm run dev
 
 ---
 
-## 📁 8. Project Structure
+---
 
-```bash
-├── 📁 admin           # Dedicated Admin Dashboard (Vite + React)
-├── 📁 backend         # Node.js/Express API & Models
-├── 📁 frontend        # Customer-facing Web Application
-├── 📁 node_modules    # Project dependencies
-├── 📄 package.json    # Project metadata & workspace scripts
-└── 📄 readme.md       # Root documentation
-```
+## 👥 9. Shipment Stakeholders
+
+To ensure clear operational oversight and responsibility, every shipment in CargoFlow defines three key stakeholders:
+
+- **📦 Shipper (Sender)**: The entity responsible for sending the cargo. Includes name, company, contact details, and pickup address. (Gujarati: મોકલનાર)
+- **🎁 Consignee (Receiver)**: The entity receiving the cargo. Includes contact details and the final delivery destination. (Gujarati: મેળવનાર)
+- **🛡️ Handled By (Internal Oversight)**: A dedicated internal admin or manager assigned to monitor and manage the shipment's lifecycle, ensuring accountability from booking to delivery.
 
 ---
 
-## 🔮 9. Future Improvements
+## 📄 10. Document Management System
+
+To maintain compliance and verify global shipments, CargoFlow includes a robust **Compliance Vault**:
+
+- **📁 Unified Storage**: Upload and manage Invoice, Packing List, Bill of Lading (BL), and ID Proofs directly per shipment.
+- **✅ Verification Workflow**: Admins can review, verify, or reject documents to ensure manifest accuracy.
+- **🖱️ Drag & Drop**: Modern, intuitive upload interface with support for PDF, JPG, and PNG formats.
+- **👁️ Instant Preview**: View documents securely within the platform for quick audit and verification.
+
+---
+
+## 🔔 11. Notification System
+
+Stay synchronized with real-time and multi-channel alerts:
+
+- **⚡ Real-time Alerts**: Powered by Socket.io for instant browser notifications on shipment updates and system events.
+- **📁 Activity Categorization**: Notifications are grouped (Today, Earlier) and categorized (Shipment, Payment, Document) for better clarity.
+- **🛠️ Automated Triggers**: System automatically notifies stakeholders on booking confirmation, status transitions, and document approvals.
+- **📩 Email Integration**: Critical alerts are mirrored to user emails (Nodemailer integration).
+
+---
+
+## 🔮 12. Future Improvements
 
 - [ ] **Mobile App**: Native iOS and Android apps for on-the-go tracking.
 - [ ] **AI Routing**: Machine learning algorithms to predict the fastest delivery routes.

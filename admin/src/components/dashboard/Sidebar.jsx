@@ -1,88 +1,90 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
-    BarChart3,
-    Users,
+    LayoutDashboard,
     Package,
-    Map as MapIcon,
+    Navigation,
+    Warehouse,
     Receipt,
+    Users,
     Settings,
     LogOut,
-    Plane,
-    PlaneTakeoff,
-    Anchor,
-    Ship,
-    Gavel,
-    Warehouse,
-    Globe
+    ChevronLeft,
+    ChevronRight,
+    Menu
 } from 'lucide-react';
 
 const navItems = [
-    { name: 'Overview', path: '/', icon: BarChart3 },
-    { name: 'Users', path: '/users', icon: Users },
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Shipments', path: '/shipments', icon: Package },
-    { name: 'Airlines', path: '/airlines', icon: Plane },
-    { name: 'Flight Bookings', path: '/flights', icon: PlaneTakeoff },
-    { name: 'Vessels & Cont.', path: '/containers', icon: Ship },
-    { name: 'Ocean Bookings', path: '/ocean-bookings', icon: Anchor },
-    { name: 'Customs Mgmt', path: '/customs', icon: Gavel },
-    { name: 'Warehouse Mgmt', path: '/warehouse', icon: Warehouse },
-    { name: 'Tracking', path: '/tracking', icon: MapIcon },
+    { name: 'Bookings', path: '/flights', icon: Navigation },
+    { name: 'Warehouse', path: '/warehouse', icon: Warehouse },
     { name: 'Billing', path: '/billing', icon: Receipt },
+    { name: 'Users', path: '/users', icon: Users },
     { name: 'Settings', path: '/settings', icon: Settings },
 ];
 
-export default function Sidebar({ onLogout }) {
+export default function Sidebar({ onLogout, isCollapsed, setIsCollapsed, isMobile, isOpen, setIsOpen }) {
     const location = useLocation();
 
     return (
-        <div className="w-64 bg-slate-950 text-slate-400 flex flex-col min-h-screen sticky top-0 border-r border-slate-900 transition-colors duration-300">
-            <div className="h-20 flex items-center px-6 border-b border-slate-900 bg-slate-950/50 backdrop-blur-xl">
-                <Link to="/" className="flex items-center gap-2 group">
-                    <div className="bg-blue-600 text-white p-2 rounded-xl group-hover:scale-110 transition-all shadow-lg shadow-blue-500/20">
-                        <Package size={20} />
+        <>
+            {/* Mobile Overlay */}
+            {isMobile && isOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
+
+            <aside className={`
+                fixed top-0 left-0 h-full z-50 bg-white border-r border-gray-200 transition-all duration-300
+                ${isMobile ? (isOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
+                ${isCollapsed ? 'w-20' : 'w-64'}
+            `}>
+                <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">
+                            <Package size={20} />
+                        </div>
+                        {!isCollapsed && <span className="font-bold text-lg text-gray-800">CargoFlow</span>}
                     </div>
-                    <span className="font-outfit font-black text-xl text-white tracking-tighter uppercase">
-                        Admin<span className="text-blue-500 italic">HQ</span>
-                    </span>
-                </Link>
-            </div>
+                    {!isMobile && (
+                        <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-1 text-gray-400 hover:text-gray-600">
+                            {isCollapsed ? <ChevronRight size={18}/> : <ChevronLeft size={18}/>}
+                        </button>
+                    )}
+                </div>
 
-            <div className="flex-1 py-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-                <div className="px-4 mb-4 text-[10px] font-black text-slate-600 uppercase tracking-widest">Network Operations</div>
-                {navItems.map((item) => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                        <Link
-                            key={item.name}
-                            to={item.path}
-                            className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all group ${isActive
-                                ? 'bg-blue-600 text-white font-bold shadow-lg shadow-blue-500/20'
-                                : 'hover:bg-slate-900 hover:text-white'
-                                }`}
-                        >
-                            <item.icon size={18} className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-500 transition-colors'} />
-                            <span className="text-sm">{item.name}</span>
-                        </Link>
-                    );
-                })}
-            </div>
+                <nav className="p-4 space-y-1">
+                    {navItems.map((item) => {
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <Link
+                                key={item.name}
+                                to={item.path}
+                                onClick={() => isMobile && setIsOpen(false)}
+                                className={`
+                                    flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                                    ${isActive ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'}
+                                `}
+                            >
+                                <item.icon size={20} />
+                                {!isCollapsed && <span>{item.name}</span>}
+                            </Link>
+                        );
+                    })}
+                </nav>
 
-            <div className="p-4 border-t border-slate-900 space-y-2">
-                <a
-                    href="http://localhost:5173/"
-                    className="flex items-center space-x-3 px-4 py-3 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/5 rounded-xl transition-all"
-                >
-                    <Globe size={18} />
-                    <span className="text-sm font-bold uppercase tracking-widest text-[10px]">Main Site</span>
-                </a>
-                <button
-                    onClick={onLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-3 text-slate-500 hover:text-red-500 hover:bg-red-500/5 rounded-xl transition-all"
-                >
-                    <LogOut size={18} />
-                    <span className="text-sm font-bold uppercase tracking-widest text-[10px]">Logout Securely</span>
-                </button>
-            </div>
-        </div>
+                <div className="absolute bottom-0 left-0 w-full p-4 border-t border-gray-100">
+                    <button
+                        onClick={onLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                    >
+                        <LogOut size={20} />
+                        {!isCollapsed && <span>Sign Out</span>}
+                    </button>
+                </div>
+            </aside>
+        </>
     );
 }
