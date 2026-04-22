@@ -1,0 +1,17 @@
+{
+    "name": "cargo-flow",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../admin && npm install",
+        "dev:backend": "npm run dev --prefix backend",
+        "dev:frontend": "npm run dev --prefix frontend",
+        "dev:admin": "npm run dev --prefix admin",
+        "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:admin\"",
+        "seed:admin": "node backend/seedAdmin.js",
+        "start": "concurrently \"npm run start --prefix backend\" \"npm run build --prefix frontend && npm run preview --prefix frontend\" \"npm run build --prefix admin && npm run preview --prefix admin\""
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}
